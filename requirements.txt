@@ -1,0 +1,7 @@
+-e git://github.com/ckan/ckanapi.git#egg=ckanapi
+logutils==0.3.3
+requests==2.4.0
+requests-cache==0.4.5
+
+# Development
+ipython
