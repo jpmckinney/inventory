@@ -1,23 +1,17 @@
+MAPPINGS = {
+  'application/access' => 'application/x-msaccess',
+  'application/excel' => 'application/vnd.ms-excel',
+  'text/comma-separated-values' => 'text/csv',
+}
+
 # @see http://www.iana.org/assignments/media-types/media-types.xhtml
 # @see http://blogs.msdn.com/b/vsofficedeveloper/archive/2008/05/08/office-2007-open-xml-mime-types.aspx
 # @see http://blogs.msdn.com/b/jaimer/archive/2008/01/04/mime-types.aspx
-MAPPINGS = {
-  'application/accdb'                        => 'application/msaccess',
-  'application/bmp'                          => 'image/bmp',
-  'application/csv'                          => 'text/csv',
-  'application/doc'                          => 'application/msword',
-  'application/docm'                         => 'application/vnd.ms-word.document.macroEnabled.12',
-  'application/docx'                         => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/html'                         => 'text/html',
-  'application/mdb'                          => 'application/x-msaccess',
+CORRECTIONS = {
   'application/ms-excel'                     => 'application/vnd.ms-excel',
   'application/msexcel'                      => 'application/vnd.ms-excel',
   'application/octet-string'                 => 'application/octet-stream',
   'application/octet_stream'                 => 'application/octet-stream',
-  'application/pptx'                         => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'application/rar'                          => 'application/x-rar-compressed',
-  'application/rdf'                          => 'application/rdf+xml',
-  'application/tiff'                         => 'image/tiff',
   'application/vnd.excel'                    => 'application/vnd.ms-excel',
   'application/vnd.ms-access'                => 'application/msaccess',
   'application/vnd.ms-excel.12'              => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -28,18 +22,9 @@ MAPPINGS = {
   'application/x-msexcel'                    => 'application/vnd.ms-excel',
   'application/x-mspowerpoint'               => 'application/vnd.ms-powerpoint',
   'application/x-zip-compressed'             => 'application/zip',
-  'application/xls'                          => 'application/vnd.ms-excel',
-  'application/xlsm'                         => 'application/vnd.ms-excel.sheet.macroEnabled.12',
-  'application/xlsx'                         => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/xml+rdf'                      => 'application/rdf+xml',
-  'application/zip+text/csv'                 => 'application/zip',
   'binary/octet-stream'                      => 'application/octet-stream',
   'image/geotiff'                            => 'image/tiff',
-  'image/jpg'                                => 'image/jpeg',
-  'text/json'                                => 'application/json',
-  'text/rdf'                                 => 'application/rdf+xml',
-  'text/tab'                                 => 'application/x-tab',
-  'text/txt'                                 => 'text/plain',
 
   '0_v2 / pdf'                                => 'application/pdf',
   'access'                                    => 'application/msaccess',

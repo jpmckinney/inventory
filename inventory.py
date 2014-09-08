@@ -212,6 +212,8 @@ def scrape(country_code, url):
 
                     dataset_metadata['extras'].add(extra['key'])
 
+            # Count each format only once to get a sense of the popularity of formats.
+            distribution_formats_found = set()
             distribution_properties_found = set()
             for resource in package['resources']:  # dcat:Distribution
                 if resource.get('state') and resource['state'] != 'active':
@@ -226,11 +228,13 @@ def scrape(country_code, url):
                 distribution_custom_properties |= resource.keys() - ckan_distribution_properties
 
                 # Not sure why catalogs sometimes omit the mimetype for the same format.
-                if resource.get('mimetype'):
-                    formats[resource['mimetype']] += 1
-                elif resource['format']:
-                    formats[resource['format']] += 1
+                # @todo Need to normalize mimetype/format here, otherwise may double count.
+                distribution_format = resource.get('mimetype') or resource['format']
+                if distribution_format:
+                    distribution_formats_found.add(distribution_format)
 
+            for distribution_format in distribution_formats_found:
+                formats[distribution_format] += 1
             for distribution_property in distribution_properties_found:
                 distribution_metadata[distribution_property] += 1
 
