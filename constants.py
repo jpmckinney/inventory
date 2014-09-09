@@ -1,19 +1,5 @@
 # @todo This list must be continually updated.
 urls = frozenset([
-    # Not CKAN:
-    # ('dk', 'http://data.digitaliser.dk/'),
-    # ('es', 'http://datos.gob.es/'),
-    # ('fi', 'http://data.suomi.fi/'),
-    # ('ge', 'http://data.gov.ge/'),
-    # ('gh', 'http://data.gov.gh/'),
-    # ('il', 'http://data.gov.il/'),
-    # ('jo', 'http://www.jordan.gov.jo/wps/portal/OpenData_en'),
-    # ('kr', 'https://www.data.go.kr/'),
-    # ('lt', 'http://opendata.gov.lt/'),
-    # ('mt', 'http://data.gov.mt/'),
-    # ('nz', 'http://data.govt.nz/'),
-    # ('tn', 'http://data.gov.tn/'),
-    # ('ua', 'http://data.gov.ua/'),
     ('ar', 'http://datospublicos.gob.ar/data/'),
     ('au', 'http://data.gov.au/'),
     ('br', 'http://dados.gov.br/'),
@@ -50,8 +36,23 @@ opencolibri_urls = frozenset([
 socrata_urls = frozenset([
     ('ke', 'http://opendata.go.ke/'),
 ])
+other_urls = frozenset([
+    ('dk', 'http://data.digitaliser.dk/'),  # 757
+    ('es', 'http://datos.gob.es/'),  # 2572
+    ('fi', 'http://data.suomi.fi/'),  # <50
+    ('ge', 'http://data.gov.ge/'),
+    ('gh', 'http://data.gov.gh/'),  # 1068
+    ('il', 'http://data.gov.il/'),
+    ('jo', 'http://www.jordan.gov.jo/wps/portal/OpenData_en'),  # <100
+    ('kr', 'https://www.data.go.kr/'),  # 9268
+    ('lt', 'http://opendata.gov.lt/'),  # 262
+    ('mt', 'http://data.gov.mt/'),  # 4
+    ('nz', 'http://data.govt.nz/'),  # 2559
+    ('tn', 'http://data.gov.tn/'),  # 133
+    ('ua', 'http://data.gov.ua/'),  # 100
+])
 
-# APIs that respond to POST but not GET requests.
+# APIs that respond to POST but not GET requests. No caching.
 post_country_codes = frozenset([
     'nl',
 ])
@@ -161,7 +162,6 @@ license_properties = frozenset([
     'license_title',
     'license_url',
 ])
-
 license_extra_properties = frozenset([
     'licence_url',
     'access_constraints',
