@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import re
 import signal
 import sys
 from collections import defaultdict
@@ -54,6 +55,8 @@ default_license_metadata = {
         'license_url': 'http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/',
     }
 }
+
+gb_open_license_re = re.compile(r'open government licen[sc]e', re.IGNORECASE)
 
 def scrape(country_code, url):
     log.info(url)
@@ -132,6 +135,40 @@ def scrape(country_code, url):
                 start += len(response['results'])
 
     for package in packages:
+        extras = {}
+
+        for extra in package.get('extras', []):
+            value = extra['value']
+            # Try to make the values uniform. GB's "theme-secondary" has values
+            # like "[u'Defence', u'Government']" which are Python, not JSON.
+            if value.startswith('[') and extra['key'] != 'theme-secondary':
+                try:
+                    value = json.loads(value)
+                    if len(value) == 1:
+                        value = value[0]
+                        # Value must be hashable.
+                        if not isinstance(value, str):
+                            value = json.dumps(value)
+                    else:
+                        value = extra['value']
+                except ValueError as e:
+                    log.error("%s %s %sapi/3/action/package_show?id=%s" % (e, value, url, package['name']))
+            if extra['key'] in extras:
+                log.warning("multiple %s %sapi/3/action/package_show?id=%s" % (extra['key'], url, package['name']))
+            else:
+                extras[extra['key']] = value
+
+        dataset_metadata['extras'] |= extras.keys()
+
+        if country_code == 'gb':
+            if package.get('unpublished') == 'true':
+                continue
+            # @see https://github.com/datagovuk/ckanext-dgu/blob/8b48fc88c9be8f3b5e3738ea96c9baab1a7deef0/ckanext/dgu/search_indexing.py#L71
+            if not (package.get('license_id') == 'uk-ogl' or
+                    bool(gb_open_license_re.search(extras.get('licence', ''))) or
+                    bool(gb_open_license_re.search(extras.get('licence_url_title', '')))):
+                continue
+
         try:
             if package.get('private'):
                 log.warning("private %sapi/3/action/package_show?id=%s" % (url, package['name']))
@@ -161,56 +198,38 @@ def scrape(country_code, url):
             elif package.get('license_title') or package.get('license_url'):
                 log.warning("license_title or license_url but no license_id %sapi/3/action/package_show?id=%s" % (url, package['name']))
 
-            if package.get('extras'):
-                extras = {}
+            # Try to avoid a null license_id.
+            if not license_id:
+                # License URLs have been found in licence_url, licence_url_title and access_constraints.
+                match = next((value for value in extras.values() if value in licence_url_to_license_id), None)
+                if match:
+                    license_id = licence_url_to_license_id[match]
+                    licenses[license_id] += 1
+                elif country_code == 'gb' and extras.get('licence') == 'Open Government Licence':
+                    license_id = 'uk-ogl'
+                    licenses[license_id] += 1
 
-                for extra in package['extras']:
-                    if extra['key'] in license_extra_properties:
-                        value = extra['value']
-                        # Try to make the values uniform.
-                        if value.startswith('['):
-                            try:
-                                value = json.loads(value)
-                                if len(value) == 1:
-                                    value = value[0]
-                                else:
-                                    value = json.dumps(sorted(set(value)))
-                            except ValueError:
-                                log.error("JSON error %s" % value)
-                        extras[extra['key']] = value
+            # The top-level "license_url" and "license_title" should
+            # agree with the extra "licence_url" and "licence_url_title".
+            # AU's "licence_url" uses a different URL for "cc-by":
+            # "http://www.opendefinition.org/licenses/cc-by".
+            if extras.get('licence_url'):
+                if package.get('license_url'):
+                    if extras.get('licence_url') not in (package.get('license_url'), 'http://www.opendefinition.org/licenses/cc-by'):
+                        log.warning("extras.licence_url expected %s got %s" % (package.get('license_url'), extras.get('licence_url')))
+                elif license_id:
+                    license_metadata[license_id]['license_url'] = extras.get('licence_url')
+                else:
+                    log.warning("extras.licence_url but no license_id %sapi/3/action/package_show?id=%s" % (url, package['name']))
 
-                # Try to avoid a null license_id.
-                if not license_id:
-                    # License URLs have been found in licence_url, licence_url_title and access_constraints.
-                    match = next((value for value in extras.values() if value in licence_url_to_license_id), None)
-                    if match:
-                        license_id = licence_url_to_license_id[match]
-                        licenses[license_id] += 1
-
-                for extra in package['extras']:
-                    # The top-level "license_url" and "license_title" should
-                    # agree with the extra "licence_url" and "licence_url_title".
-                    # AU's "licence_url" uses a different URL for "cc-by":
-                    # "http://www.opendefinition.org/licenses/cc-by".
-                    if extra['key'] == 'licence_url':
-                        if package.get('license_url'):
-                            if extras.get('licence_url') not in (package.get('license_url'), 'http://www.opendefinition.org/licenses/cc-by'):
-                                log.warning("extras.licence_url expected %s got %s" % (package.get('license_url'), extras.get('licence_url')))
-                        elif license_id:
-                            license_metadata[license_id]['license_url'] = extras.get('licence_url')
-                        else:
-                            log.warning("extras.licence_url but no license_id %sapi/3/action/package_show?id=%s" % (url, package['name']))
-
-                    if extra['key'] == 'licence_url_title':
-                        if package.get('license_title'):
-                            if extras.get('licence_url_title') != package.get('license_title'):
-                                log.warning("extras.licence_url_title expected %s got %s" % (package.get('license_title'), extras.get('licence_url_title')))
-                        elif license_id:
-                            license_metadata[license_id]['license_title'] = extras.get('licence_url_title')
-                        else:
-                            log.warning("extras.licence_url_title but no license_id %sapi/3/action/package_show?id=%s" % (url, package['name']))
-
-                    dataset_metadata['extras'].add(extra['key'])
+            if extras.get('licence_url_title'):
+                if package.get('license_title'):
+                    if extras.get('licence_url_title') != package.get('license_title'):
+                        log.warning("extras.licence_url_title expected %s got %s" % (package.get('license_title'), extras.get('licence_url_title')))
+                elif license_id:
+                    license_metadata[license_id]['license_title'] = extras.get('licence_url_title')
+                else:
+                    log.warning("extras.licence_url_title but no license_id %sapi/3/action/package_show?id=%s" % (url, package['name']))
 
             # Count each format only once to get a sense of the popularity of formats.
             distribution_formats_found = set()
