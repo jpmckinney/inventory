@@ -6,6 +6,7 @@ urls = frozenset([
     ('ca', 'http://data.gc.ca/data/en/'),
     ('fr', 'http://data.gouv.fr/'),
     ('gb', 'http://data.gov.uk/'),
+    ('id'  'http://data.id/'),
     ('ie', 'http://data.gov.ie/'),
     ('it', 'http://www.dati.gov.it/catalog/'),
     ('md', 'http://data.gov.md/'),
