@@ -163,11 +163,6 @@ license_properties = frozenset([
     'license_title',
     'license_url',
 ])
-license_extra_properties = frozenset([
-    'licence_url',
-    'access_constraints',
-    'licence_url_title',
-])
 
 # These validations serve no substantive purpose, but may be used at a later date.
 allowed_package_types = frozenset([

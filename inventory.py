@@ -17,8 +17,7 @@ from logutils.colorize import ColorizingStreamHandler
 
 from constants import (urls, post_country_codes, ckan_dataset_properties,
     ckan_distribution_properties, dataset_properties, distribution_properties,
-    license_properties, license_extra_properties, allowed_package_types,
-    allowed_resource_types)
+    license_properties, allowed_package_types, allowed_resource_types)
 from mappings import licence_url_to_license_id
 
 requests_cache.install_cache('inventory_cache')  # will never expire unless expire_after is set
