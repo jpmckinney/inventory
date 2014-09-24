@@ -6,7 +6,7 @@ Scripts used by the [Open Government Partnership](http://www.opengovpartnership.
 
     mkvirtualenv inventory
     pip install -r requirements.txt
-    python licenses.py
+    python inventory.py
 
     bundle
     rake -T
