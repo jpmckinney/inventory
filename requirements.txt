@@ -4,4 +4,6 @@ requests==2.4.0
 requests-cache==0.4.5
 
 # Development
+autopep8
+flake8
 ipython
