@@ -85,6 +85,7 @@ end
 
 namespace :ckan do
   namespace :formats do
+    desc 'List unrecognized formats'
     task :mappings do
       formats = []
 
@@ -102,6 +103,7 @@ namespace :ckan do
       puts "#{formats.size} unrecognized formats"
     end
 
+    desc 'List formats'
     task :list do
       totals = {}
 
