@@ -23,6 +23,8 @@ urls = frozenset([
     # CKAN is hidden:
     # ('no', 'http://data.norge.no/'),
 ])
+
+# @note The following are unused.
 junar_urls = frozenset([
     ('cl', 'http://datos.gob.cl/'),
     ('cr', 'http://datosabiertos.gob.go.cr/'),
