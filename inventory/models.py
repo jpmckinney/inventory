@@ -43,7 +43,7 @@ class Resource(models.Model):
     package = models.ForeignKey('Package')
 
     # Properties
-    _id = UUIDField(unique=True)
+    _id = UUIDField()
     json = JSONField()
     custom_properties = ArrayField(dbtype='text')
 
@@ -56,3 +56,6 @@ class Resource(models.Model):
     size = models.BigIntegerField(null=True)
     mimetype = models.TextField(default='')
     format = models.TextField(default='')
+
+    class Meta:
+        unique_together = (('package', '_id'),)
