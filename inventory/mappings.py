@@ -1,3 +1,20 @@
+# Some catalogs use English license titles at first and translate later.
+default_license_metadata = {
+    'notspecified': {
+        'license_title': 'License Not Specified',
+    },
+    'odc-odbl': {
+        'license_title': 'Open Data Commons Open Database License (ODbL)',
+    },
+    'other-open': {
+        'license_title': 'Other (Open)',
+    },
+    'uk-ogl': {
+        'license_title': 'UK Open Government Licence (OGL)',
+        'license_url': 'http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/',
+    }
+}
+
 # GB often uses "extras" for licensing, but has no "licence_id" under "extras".
 licence_url_to_license_id = {
     'http://inspire.halton.gov.uk/eul':

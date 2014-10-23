@@ -130,7 +130,7 @@ dataset_properties = frozenset([
     'metadata_created',  # dct:issued
     'metadata_modified',  # dct:modified
     'owner_org',  # dct:publisher
-    'id',  # dct:identifier
+    # 'id',  # dct:identifier  # 'id' can only be used as a field name if the field also sets 'primary_key=True'.
     'tags',  # dcat:keyword
     'maintainer',  # vcard:fn
     'maintainer_email',  # vcard:hasEmail
