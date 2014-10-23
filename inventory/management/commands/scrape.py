@@ -278,6 +278,21 @@ class Command(BaseCommand):
 
                     subrecord.save()
 
+            except DataError as e:
+                try:
+                    if len(subrecord.url) > 600:
+                        log.error('subrecord.url is %d' % len(subrecord.url))
+                except NameError:
+                    if len(record.source_url) > 200:
+                        log.error('record.source_url is %d' % len(record.source_url))
+                    if len(record.url) > 500:
+                        log.error('record.url is %d' % len(record.url))
+                    if len(record.license_url) > 200:
+                        log.error('record.license_url is %d' % len(record.license_url))
+                    if len(record.maintainer_email) > 254:
+                        log.error('record.maintainer_email is %d' % len(record.maintainer_email))
+                    if len(record.author_email) > 254:
+                        log.error('record.author_email is %d' % len(record.author_email))
             except KeyError as e:
                 log.error('%s missing key %s' % (source_url, e))
 

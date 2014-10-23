@@ -7,7 +7,7 @@ from uuidfield import UUIDField
 class Package(models.Model):
     # Source
     country_code = models.CharField(max_length=2)
-    source_url = models.URLField(unique=True, max_length=200)
+    source_url = models.URLField(unique=True)
 
     # Properties
     name = models.CharField(max_length=100)  # @see https://github.com/ckan/ckan/blob/master/ckan/model/package.py#L27
@@ -21,7 +21,7 @@ class Package(models.Model):
     metadata_created = models.DateTimeField()
     metadata_modified = models.DateTimeField()
     owner_org = models.TextField(default='')
-    _id = UUIDField()
+    _id = models.TextField(default='')  # not always a UUID
     tags = JSONField()
     maintainer = models.TextField(default='')
     maintainer_email = models.EmailField(default='')
@@ -43,7 +43,7 @@ class Resource(models.Model):
     package = models.ForeignKey('Package')
 
     # Properties
-    _id = UUIDField()
+    _id = models.TextField(default='')  # not always a UUID
     json = JSONField()
     custom_properties = ArrayField(dbtype='text')
 
@@ -52,7 +52,7 @@ class Resource(models.Model):
     description = models.TextField(default='')
     created = models.DateTimeField(null=True)
     last_modified = models.DateTimeField(null=True)
-    url = models.URLField(default='', max_length=500)  # 403 observed
+    url = models.URLField(default='', max_length=600)  # 511 observed
     size = models.BigIntegerField(null=True)
     mimetype = models.TextField(default='')
     format = models.TextField(default='')
