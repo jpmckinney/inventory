@@ -50,9 +50,9 @@ class Resource(models.Model):
     # dcat:Distribution
     name = models.TextField(default='')
     description = models.TextField(default='')
-    created = models.DateTimeField()
-    last_modified = models.DateTimeField()
-    url = models.URLField(default='')
-    size = models.BigIntegerField()
+    created = models.DateTimeField(null=True)
+    last_modified = models.DateTimeField(null=True)
+    url = models.URLField(default='', max_length=500)  # 403 observed
+    size = models.BigIntegerField(null=True)
     mimetype = models.TextField(default='')
     format = models.TextField(default='')

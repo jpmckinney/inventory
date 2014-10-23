@@ -278,13 +278,6 @@ class Command(BaseCommand):
 
                     subrecord.save()
 
-            except DataError as e:
-                if len(record.source_url) > 500:
-                    log.error('record.source_url is %d' % len(record.source_url))
-                if len(record.url) > 500:
-                    log.error('record.url is %d' % len(record.url))
-                if len(record.license_url) > 200:
-                    log.error('record.license_url is %d' % len(record.license_url))
             except KeyError as e:
                 log.error('%s missing key %s' % (source_url, e))
 
