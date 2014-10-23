@@ -52,7 +52,7 @@ class Resource(models.Model):
     description = models.TextField(default='')
     created = models.DateTimeField(null=True)
     last_modified = models.DateTimeField(null=True)
-    url = models.URLField(default='', max_length=600)  # 511 observed
+    url = models.URLField(default='', max_length=2000)  # 1692 observed
     size = models.BigIntegerField(null=True)
     mimetype = models.TextField(default='')
     format = models.TextField(default='')
