@@ -124,30 +124,30 @@ ckan_distribution_properties = frozenset([
 ])
 
 # @see http://www.w3.org/TR/vocab-dcat/
-dataset_properties = frozenset([
-    'title',  # dct:title
-    'notes',  # dct:description
-    'metadata_created',  # dct:issued
-    'metadata_modified',  # dct:modified
-    'owner_org',  # dct:publisher
-    # 'id',  # dct:identifier  # 'id' can only be used as a field name if the field also sets 'primary_key=True'.
-    'tags',  # dcat:keyword
-    'maintainer',  # vcard:fn
-    'maintainer_email',  # vcard:hasEmail
-    'author',  # vcard:fn
-    'author_email',  # vcard:hasEmail
-    'url',  # dcat:landingPage
-])
-distribution_properties = frozenset([
-    'name',  # dct:title
-    'description',  # dct:description
-    'created',  # dct:issued
-    'last_modified',  # dct:modified
-    'url',  # dcat:accessURL
-    'size',  # dcat:byteSize
-    'mimetype',  # dcat:mediaType
-    'format',  # dct:format
-])
+dataset_properties = {
+    'title': 'title',  # dct:title
+    'notes': 'description',  # dct:description
+    'metadata_created': 'issued',  # dct:issued
+    'metadata_modified': 'modified',  # dct:modified
+    'owner_org': 'publisher',  # dct:publisher
+    'id': 'identifier',  # dct:identifier
+    'tags': 'keyword',  # dcat:keyword
+    'maintainer': 'maintainer',  # vcard:fn
+    'maintainer_email': 'maintainer_email',  # vcard:hasEmail
+    'author': 'author',  # vcard:fn
+    'author_email': 'author_email',  # vcard:hasEmail
+    'url': 'landingPage',  # dcat:landingPage
+}
+distribution_properties = {
+    'name': 'title',  # dct:title
+    'description': 'description',  # dct:description
+    'created': 'issued',  # dct:issued
+    'last_modified': 'modified',  # dct:modified
+    'url': 'accessURL',  # dcat:accessURL
+    'size': 'byteSize',  # dcat:byteSize
+    'mimetype': 'mediaType',  # dcat:mediaType
+    'format': 'format',  # dct:format
+}
 # CKAN doesn't have:
 # * dct:language
 # * dct:accrualPeriodicity

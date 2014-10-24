@@ -195,11 +195,9 @@ class Command(BaseCommand):
             record.custom_properties = list(package.keys() - ckan_dataset_properties)
             record.extras_keys = list(set(extras.keys()))
 
-            if package.get('id'):
-                record._id = package['id']
-            for dataset_property in dataset_properties:
+            for dataset_property, column_name in dataset_properties.items():
                 if package.get(dataset_property):
-                    setattr(record, dataset_property, package[dataset_property])
+                    setattr(record, column_name, package[dataset_property])
             for license_property in license_properties:
                 if package.get(license_property):
                     setattr(record, license_property, package[license_property])
@@ -272,9 +270,9 @@ class Command(BaseCommand):
                     subrecord.json = resource
                     subrecord.custom_properties = list(resource.keys() - ckan_distribution_properties)
 
-                    for distribution_property in distribution_properties:
+                    for distribution_property, column_name in distribution_properties.items():
                         if resource.get(distribution_property):
-                            setattr(subrecord, distribution_property, resource[distribution_property])
+                            setattr(subrecord, column_name, resource[distribution_property])
 
                     subrecord.save()
 

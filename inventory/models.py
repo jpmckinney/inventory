@@ -17,17 +17,17 @@ class Package(models.Model):
 
     # dcat:Dataset
     title = models.TextField(default='')
-    notes = models.TextField(default='')
-    metadata_created = models.DateTimeField()
-    metadata_modified = models.DateTimeField()
-    owner_org = models.TextField(default='')
-    _id = models.TextField(default='')  # not always a UUID
-    tags = JSONField()
+    description = models.TextField(default='')
+    issued = models.DateTimeField()
+    modified = models.DateTimeField()
+    publisher = models.TextField(default='')
+    identifier = models.TextField(default='')  # not always a UUID
+    keyword = JSONField()
     maintainer = models.TextField(default='')
     maintainer_email = models.EmailField(default='')
     author = models.TextField(default='')
     author_email = models.EmailField(default='')
-    url = models.URLField(default='', max_length=500)  # 401 observed
+    landingPage = models.URLField(default='', max_length=500)  # 401 observed
 
     # License properties
     isopen = models.NullBooleanField()
