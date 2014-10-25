@@ -7,6 +7,7 @@ import signal
 import sys
 from ast import literal_eval
 from multiprocessing import Process
+from optparse import make_option
 from urllib.parse import urlparse
 
 import ckanapi
@@ -23,8 +24,6 @@ from inventory.constants import (urls, post_country_codes, ckan_dataset_properti
                                  allowed_package_types, allowed_resource_types)
 from inventory.mappings import licence_url_to_license_id
 
-requests_cache.install_cache('inventory_cache')  # will never expire unless expire_after is set
-
 
 class Handler(ColorizingStreamHandler):
     level_map = {
@@ -36,24 +35,72 @@ class Handler(ColorizingStreamHandler):
     }
 
 log = logging.getLogger()  # __name__ to quiet requests
-log.setLevel(logging.DEBUG)
-handler = Handler(sys.stdout)
-handler.setFormatter(logging.Formatter('%(levelname)-5s %(asctime)s %(message)s', datefmt='%H:%M:%S'))
-log.addHandler(handler)
 
 
 class Command(BaseCommand):
     args = '<country_code country_code ...>'
     help = 'Scrapers packages from CKAN APIs'
 
+    option_list = BaseCommand.option_list + (
+        make_option('--no-cache', action='store_false', dest='cache',
+                    default=True,
+                    help='Do not cache HTTP GET requests.'),
+        make_option('--expire-after', action='store', dest='expire_after',
+                    type='int',
+                    help='The number of seconds after which the cache is expired.'),
+        make_option('--exclude', action='store_true', dest='exclude',
+                    default=False,
+                    help='Exclude the given country codes.'),
+        make_option('-n', '--dry-run', action='store_true', dest='dry_run',
+                    default=False,
+                    help='Print the plan without scraping.'),
+        make_option('-q', '--quiet', action='store_const', dest='level',
+                    const=logging.INFO,
+                    help='Quiet mode. No DEBUG messages.'),
+        make_option('--silent', action='store_const', dest='level',
+                    const=logging.WARNING,
+                    help='Quiet mode. No DEBUG or INFO messages.'),
+    )
+
     python_value_re = re.compile(r"\A\[u'")
     gb_open_license_re = re.compile(r'open government licen[sc]e', re.IGNORECASE)
 
     def handle(self, *args, **options):
+        # @see http://requests-cache.readthedocs.org/en/latest/api.html#requests_cache.core.install_cache
+        if options['cache']:
+            cache_options = {}
+            if options['expire_after']:
+                cache_options['expire_after'] = options['expire_after']
+            requests_cache.install_cache('inventory_cache', allowable_methods=('HEAD', 'GET', 'POST'), **cache_options)
+
+        log.setLevel(options['level'] or logging.DEBUG)
+        handler = Handler(sys.stdout)
+        handler.setFormatter(logging.Formatter('%(levelname)-5s %(asctime)s %(message)s', datefmt='%H:%M:%S'))
+        log.addHandler(handler)
+
+        if not args or options['exclude']:
+            include = dict(urls)
+        else:
+            include = {}
+
+        if args:
+            if options['exclude']:
+                for arg in args:
+                    del include[arg]
+            else:
+                for country_code, url in urls:
+                    if country_code in args:
+                        include[country_code] = url
+
+        for country_code, url in include.items():
+            print('{}: {}'.format(country_code, url))
+
+        if options['dry_run']:
+            exit(0)
+
         processes = [
             Process(target=self.scrape, args=(country_code, url))
-            for country_code, url in urls
-            if not args or country_code in args
+            for country_code, url in include.items()
         ]
 
         def signal_handler(signal, frame):
