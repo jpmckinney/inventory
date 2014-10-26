@@ -10,7 +10,7 @@ import requests_cache
 from django.core.management.base import BaseCommand
 from logutils.colorize import ColorizingStreamHandler
 
-from inventory.scrapers import classes
+from inventory.scrapers import catalogs
 
 
 class Handler(ColorizingStreamHandler):
@@ -64,12 +64,11 @@ class Command(BaseCommand):
         logger.addHandler(handler)
 
         scrapers = []
-        for klass in classes:
-            for country_code in klass.supported_country_codes():
-                if not args or country_code in args and not options['exclude'] or country_code not in args and options['exclude']:
-                    scraper = klass(country_code)
-                    scrapers.append(scraper)
-                    print(scraper)
+        for catalog in catalogs:
+            if not args or catalog.country_code in args and not options['exclude'] or catalog.country_code not in args and options['exclude']:
+                scraper = catalog.scraper(catalog)
+                scrapers.append(scraper)
+                print(scraper)
 
         if options['dry_run']:
             exit(0)

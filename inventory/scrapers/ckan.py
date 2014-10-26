@@ -14,44 +14,17 @@ gb_open_license_re = re.compile(r'open government licen[sc]e', re.IGNORECASE)
 
 
 class CKAN(Scraper):
-    @classmethod
-    def supported_urls(cls):
-        return {
-            'ar': 'http://datospublicos.gob.ar/data/',
-            'au': 'http://data.gov.au/',
-            'br': 'http://dados.gov.br/',
-            'ca': 'http://data.gc.ca/data/en/',
-            'gb': 'http://data.gov.uk/',
-            'id': 'http://data.id/',
-            'ie': 'http://data.gov.ie/',
-            'it': 'http://www.dati.gov.it/catalog/',
-            'md': 'http://data.gov.md/ckan',
-            'mx': 'http://catalogo.datos.gob.mx/',
-            'nl': 'https://data.overheid.nl/data/',
-            'ph': 'http://data.gov.ph/catalogue/',
-            'py': 'http://datos.gov.py/',
-            'ro': 'http://data.gov.ro/',
-            'se': 'http://oppnadata.se/',
-            'sk': 'http://data.gov.sk/',
-            'tz': 'http://opendata.go.tz/',
-            'us': 'http://catalog.data.gov/',
-            'uy': 'https://catalogodatos.gub.uy/',
-            # CKAN is hidden:
-            # 'fr': 'http://data.gouv.fr/',
-            # 'no': 'http://data.norge.no/',
-        }
-
     def get_packages(self):
-        url = self.url
+        url = self.catalog.url
 
         # Create a CKAN client.
         # @note NL does not respond to GET requests.
-        client = ckanapi.RemoteCKAN(url, get_only=self.country_code != 'nl')
+        client = ckanapi.RemoteCKAN(url, get_only=self.catalog.get_only)
 
         # Get all the packages.
         # @note 300,000 is the most datasets in any catalog.
         try:
-            package_search = client.action.package_search(rows=300000)
+            package_search = client.action.package_search(rows=300000, **self.catalog.parameters)
         except requests.packages.urllib3.exceptions.ProtocolError:
             self.error('ProtocolError %sapi/3/action/package_search' % url)
             return
@@ -61,7 +34,7 @@ class CKAN(Scraper):
 
         # Confirm that the total number of packages is correct.
         # @note AR over-reports the "count" in package_search.
-        if packages_retrieved != packages_count:
+        if packages_retrieved != packages_count and not self.catalog.parameters:
             try:
                 package_list = client.action.package_list()
             except requests.packages.urllib3.exceptions.ProtocolError:
@@ -88,7 +61,7 @@ class CKAN(Scraper):
                 print('.', end='', flush=True)
 
                 try:
-                    package_search = client.action.package_search(rows=packages_retrieved, start=start)
+                    package_search = client.action.package_search(rows=packages_retrieved, start=start, **self.catalog.parameters)
                 except ckanapi.errors.CKANAPIError:
                     self.error('CKANAPIError %sapi/3/action/package_search?rows=%d&start=%d' % (url, packages_retrieved, start))
                 except requests.packages.urllib3.exceptions.ProtocolError:
@@ -100,11 +73,7 @@ class CKAN(Scraper):
                     yield package
 
     def save_package(self, package):
-        # GB lists packages for which no data is published.
-        if self.country_code == 'gb' and package.get('unpublished') == 'true':
-            return
-
-        source_url = '%sapi/3/action/package_show?id=%s' % (self.url, package['name'])
+        source_url = '%sapi/3/action/package_show?id=%s' % (self.catalog.url, package['name'])
 
         extras = {}
 
@@ -133,16 +102,7 @@ class CKAN(Scraper):
             elif value:  # no clobber
                 extras[extra['key']] = value
 
-        # GB lists packages that it recognizes are not open data.
-        # @see https://github.com/datagovuk/ckanext-dgu/blob/8b48fc88c9be8f3b5e3738ea96c9baab1a7deef0/ckanext/dgu/search_indexing.py#L71
-        if self.country_code == 'gb' and not (
-            package.get('license_id') == 'uk-ogl' or
-            bool(gb_open_license_re.search(extras.get('licence', ''))) or
-            bool(gb_open_license_re.search(extras.get('licence_url_title', '')))
-        ):
-            return
-
-        dataset = self.find_or_initialize(Dataset, country_code=self.country_code, name=package['name'])
+        dataset = self.find_or_initialize(Dataset, country_code=self.catalog.country_code, name=package['name'])
         dataset.json = package
         dataset.custom_properties = list(package.keys() - ckan_dataset_properties)
         dataset.source_url = source_url
@@ -161,7 +121,7 @@ class CKAN(Scraper):
             match = next((value for value in extras.values() if value in licence_url_to_license_id), None)
             if match:
                 license_id = licence_url_to_license_id[match]
-            elif self.country_code == 'gb' and extras.get('licence') == 'Open Government Licence':
+            elif self.catalog.country_code == 'gb' and extras.get('licence') == 'Open Government Licence':
                 license_id = 'uk-ogl'
             elif package.get('license_title') or package.get('license_url'):
                 self.warning('license_title or license_url but no license_id %s' % source_url)
@@ -176,7 +136,7 @@ class CKAN(Scraper):
             if package.get('license_url'):
                 if extras.get('licence_url') != package.get('license_url') and not (
                     # @note AU's "licence_url" uses a different URL for "cc-by".
-                    self.country_code == 'au' and
+                    self.catalog.country_code == 'au' and
                     extras.get('licence_url') == 'http://www.opendefinition.org/licenses/cc-by' and
                     package.get('license_url') == 'http://creativecommons.org/licenses/by/3.0/au/'
                 ):
@@ -209,15 +169,15 @@ class CKAN(Scraper):
 
         except DataError as e:
             try:
-                if len(distribution.url) > 2000:
-                    self.error('distribution.url is %d' % len(distribution.url))
+                if len(distribution.accessURL) > 2000:
+                    self.error('distribution.accessURL is %d' % len(distribution.accessURL))
             except NameError:
                 if len(dataset.name) > 100:
                     self.error('dataset.name is %d' % len(dataset.name))
                 if len(dataset.source_url) > 200:
                     self.error('dataset.source_url is %d' % len(dataset.source_url))
-                if len(dataset.url) > 500:
-                    self.error('dataset.url is %d' % len(dataset.url))
+                if len(dataset.landingPage) > 500:
+                    self.error('dataset.landingPage is %d' % len(dataset.landingPage))
                 if len(dataset.license_url) > 200:
                     self.error('dataset.license_url is %d' % len(dataset.license_url))
                 if len(dataset.maintainer_email) > 254:
