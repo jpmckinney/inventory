@@ -10,7 +10,7 @@ import requests_cache
 from django.core.management.base import BaseCommand
 from logutils.colorize import ColorizingStreamHandler
 
-from inventory.scrapers import CKANScraper
+from inventory.scrapers import classes
 
 
 class Handler(ColorizingStreamHandler):
@@ -22,33 +22,7 @@ class Handler(ColorizingStreamHandler):
         logging.CRITICAL: ('red', 'white', True),
     }
 
-logger = logging.getLogger()  # __name__ to quiet requests
-
-# @todo This list must be continually updated.
-ckan_urls = frozenset([
-    ('ar', 'http://datospublicos.gob.ar/data/'),
-    ('au', 'http://data.gov.au/'),
-    ('br', 'http://dados.gov.br/'),
-    ('ca', 'http://data.gc.ca/data/en/'),
-    ('fr', 'http://data.gouv.fr/'),
-    ('gb', 'http://data.gov.uk/'),
-    ('id', 'http://data.id/'),
-    ('ie', 'http://data.gov.ie/'),
-    ('it', 'http://www.dati.gov.it/catalog/'),
-    ('md', 'http://data.gov.md/ckan'),
-    ('mx', 'http://catalogo.datos.gob.mx/'),
-    ('nl', 'https://data.overheid.nl/data/'),
-    ('ph', 'http://data.gov.ph/catalogue/'),
-    ('py', 'http://datos.gov.py/'),
-    ('ro', 'http://data.gov.ro/'),
-    ('se', 'http://oppnadata.se/'),
-    ('sk', 'http://data.gov.sk/'),
-    ('tz', 'http://opendata.go.tz/'),
-    ('us', 'http://catalog.data.gov/'),
-    ('uy', 'https://catalogodatos.gub.uy/'),
-    # CKAN is hidden:
-    # ('no', 'http://data.norge.no/'),
-])
+logger = logging.getLogger()  # 'inventory' to quiet requests
 
 
 class Command(BaseCommand):
@@ -89,29 +63,20 @@ class Command(BaseCommand):
         handler.setFormatter(logging.Formatter('%(levelname)-5s %(asctime)s %(message)s', datefmt='%H:%M:%S'))
         logger.addHandler(handler)
 
-        if not args or options['exclude']:
-            include = dict(ckan_urls)
-        else:
-            include = {}
-
-        if args:
-            if options['exclude']:
-                for arg in args:
-                    del include[arg]
-            else:
-                for country_code, url in ckan_urls:
-                    if country_code in args:
-                        include[country_code] = url
-
-        for country_code, url in include.items():
-            print('{}: {}'.format(country_code, url))
+        scrapers = []
+        for klass in classes:
+            for country_code in klass.supported_country_codes():
+                if not args or country_code in args and not options['exclude'] or country_code not in args and options['exclude']:
+                    scraper = klass(country_code)
+                    scrapers.append(scraper)
+                    print(scraper)
 
         if options['dry_run']:
             exit(0)
 
         processes = [
-            Process(target=self.scrape, args=(country_code, url))
-            for country_code, url in include.items()
+            Process(target=self.scrape, args=(scraper,))
+            for scraper in scrapers
         ]
 
         def signal_handler(signal, frame):
@@ -127,6 +92,6 @@ class Command(BaseCommand):
         for process in processes:
             process.join()
 
-    def scrape(self, country_code, url):
-        CKANScraper(country_code, url).scrape()
-        logger.info('%s done' % country_code)
+    def scrape(self, scraper):
+        scraper.scrape()
+        logger.info('%s done' % scraper)

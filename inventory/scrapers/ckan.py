@@ -7,24 +7,53 @@ import requests
 from django.db.utils import DataError
 
 from .base import Scraper
-from inventory.models import Dataset, Distribution
+from ..models import Dataset, Distribution
 
 python_value_re = re.compile(r"\A\[u'")
 gb_open_license_re = re.compile(r'open government licen[sc]e', re.IGNORECASE)
 
 
-class CKANScraper(Scraper):
+class CKAN(Scraper):
+    @classmethod
+    def supported_urls(cls):
+        return {
+            'ar': 'http://datospublicos.gob.ar/data/',
+            'au': 'http://data.gov.au/',
+            'br': 'http://dados.gov.br/',
+            'ca': 'http://data.gc.ca/data/en/',
+            'gb': 'http://data.gov.uk/',
+            'id': 'http://data.id/',
+            'ie': 'http://data.gov.ie/',
+            'it': 'http://www.dati.gov.it/catalog/',
+            'md': 'http://data.gov.md/ckan',
+            'mx': 'http://catalogo.datos.gob.mx/',
+            'nl': 'https://data.overheid.nl/data/',
+            'ph': 'http://data.gov.ph/catalogue/',
+            'py': 'http://datos.gov.py/',
+            'ro': 'http://data.gov.ro/',
+            'se': 'http://oppnadata.se/',
+            'sk': 'http://data.gov.sk/',
+            'tz': 'http://opendata.go.tz/',
+            'us': 'http://catalog.data.gov/',
+            'uy': 'https://catalogodatos.gub.uy/',
+            # CKAN is hidden:
+            # 'fr': 'http://data.gouv.fr/',
+            # 'no': 'http://data.norge.no/',
+        }
+
     def get_packages(self):
+        url = self.url
+
         # Create a CKAN client.
         # @note NL does not respond to GET requests.
-        client = ckanapi.RemoteCKAN(self.url, get_only=self.country_code != 'nl')
+        client = ckanapi.RemoteCKAN(url, get_only=self.country_code != 'nl')
 
         # Get all the packages.
         # @note 300,000 is the most datasets in any catalog.
         try:
             package_search = client.action.package_search(rows=300000)
         except requests.packages.urllib3.exceptions.ProtocolError:
-            self.error('ProtocolError %sapi/3/action/package_search' % self.url)
+            self.error('ProtocolError %sapi/3/action/package_search' % url)
             return
 
         packages_retrieved = len(package_search['results'])
@@ -36,7 +65,7 @@ class CKANScraper(Scraper):
             try:
                 package_list = client.action.package_list()
             except requests.packages.urllib3.exceptions.ProtocolError:
-                self.error('ProtocolError %sapi/3/action/package_list' % self.url)
+                self.error('ProtocolError %sapi/3/action/package_list' % url)
                 return
 
             # package_list lists only the names of all packages.
@@ -47,7 +76,7 @@ class CKANScraper(Scraper):
                 packages_count = len(package_list)
 
         # Report the total number of packages.
-        self.info('%d packages %s' % (packages_count, self.url))
+        self.info('%d packages %s' % (packages_count, url))
 
         for package in package_search['results']:
             yield package
@@ -61,9 +90,9 @@ class CKANScraper(Scraper):
                 try:
                     package_search = client.action.package_search(rows=packages_retrieved, start=start)
                 except ckanapi.errors.CKANAPIError:
-                    self.error('CKANAPIError %sapi/3/action/package_search?rows=%d&start=%d' % (self.url, packages_retrieved, start))
+                    self.error('CKANAPIError %sapi/3/action/package_search?rows=%d&start=%d' % (url, packages_retrieved, start))
                 except requests.packages.urllib3.exceptions.ProtocolError:
-                    self.error('ProtocolError %sapi/3/action/package_search?rows=%d&start=%d' % (self.url, packages_retrieved, start))
+                    self.error('ProtocolError %sapi/3/action/package_search?rows=%d&start=%d' % (url, packages_retrieved, start))
 
                 start += len(package_search['results'])
 
@@ -88,19 +117,19 @@ class CKANScraper(Scraper):
                     try:
                         value = literal_eval(value)
                     except ValueError as e:
-                        log.warning('%s %s %s' % (e, value, source_url))
+                        self.warning('%s %s %s' % (e, value, source_url))
                 elif value.startswith('['):
                     try:
                         value = json.loads(value)
                     except ValueError as e:
-                        log.warning('%s %s %s' % (e, value, source_url))
+                        self.warning('%s %s %s' % (e, value, source_url))
             if isinstance(value, list) and len(value) == 1:
                 value = value[0]
             if not isinstance(value, str):  # Value must be hashable for next() call below.
                 value = json.dumps(value)
 
             if extra['key'] in extras and extra['value'] != extras[extra['key']]:
-                log.warning('multiple %s %s' % (extra['key'], source_url))
+                self.warning('multiple %s %s' % (extra['key'], source_url))
             elif value:  # no clobber
                 extras[extra['key']] = value
 
@@ -118,7 +147,6 @@ class CKANScraper(Scraper):
         dataset.custom_properties = list(package.keys() - ckan_dataset_properties)
         dataset.source_url = source_url
         dataset.extras_keys = list(set(extras.keys()))
-
         for dataset_property, column_name in dataset_properties.items():
             if package.get(dataset_property):
                 setattr(dataset, column_name, package[dataset_property])
@@ -136,7 +164,7 @@ class CKANScraper(Scraper):
             elif self.country_code == 'gb' and extras.get('licence') == 'Open Government Licence':
                 license_id = 'uk-ogl'
             elif package.get('license_title') or package.get('license_url'):
-                log.warning('license_title or license_url but no license_id %s' % source_url)
+                self.warning('license_title or license_url but no license_id %s' % source_url)
 
         if license_id:
             dataset.license_id = license_id
@@ -152,19 +180,19 @@ class CKANScraper(Scraper):
                     extras.get('licence_url') == 'http://www.opendefinition.org/licenses/cc-by' and
                     package.get('license_url') == 'http://creativecommons.org/licenses/by/3.0/au/'
                 ):
-                    log.warning('extras.licence_url expected %s got %s' % (package.get('license_url'), extras.get('licence_url')))
+                    self.warning('extras.licence_url expected %s got %s' % (package.get('license_url'), extras.get('licence_url')))
             elif license_id:  # only runs if license_url not previously set
                 dataset.license_url = extras.get('licence_url')
             else:
-                log.warning('extras.licence_url but no license_id %s' % source_url)
+                self.warning('extras.licence_url but no license_id %s' % source_url)
         if extras.get('licence_url_title'):
             if package.get('license_title'):
                 if extras.get('licence_url_title') != package.get('license_title'):
-                    log.warning('extras.licence_url_title expected %s got %s' % (package.get('license_title'), extras.get('licence_url_title')))
+                    self.warning('extras.licence_url_title expected %s got %s' % (package.get('license_title'), extras.get('licence_url_title')))
             elif license_id:  # only runs if license_title not previously set
                 dataset.license_title = extras.get('licence_url_title')
             else:
-                log.warning('extras.licence_url_title but no license_id %s' % source_url)
+                self.warning('extras.licence_url_title but no license_id %s' % source_url)
 
         try:
             dataset.save()
@@ -173,7 +201,6 @@ class CKANScraper(Scraper):
                 distribution = self.find_or_initialize(Distribution, dataset=dataset, _id=resource['id'])
                 distribution.json = resource
                 distribution.custom_properties = list(resource.keys() - ckan_distribution_properties)
-
                 for distribution_property, column_name in distribution_properties.items():
                     if resource.get(distribution_property):
                         setattr(distribution, column_name, resource[distribution_property])
@@ -182,21 +209,23 @@ class CKANScraper(Scraper):
 
         except DataError as e:
             try:
-                if len(distribution.url) > 600:
-                    log.error('distribution.url is %d' % len(distribution.url))
+                if len(distribution.url) > 2000:
+                    self.error('distribution.url is %d' % len(distribution.url))
             except NameError:
+                if len(dataset.name) > 100:
+                    self.error('dataset.name is %d' % len(dataset.name))
                 if len(dataset.source_url) > 200:
-                    log.error('dataset.source_url is %d' % len(dataset.source_url))
+                    self.error('dataset.source_url is %d' % len(dataset.source_url))
                 if len(dataset.url) > 500:
-                    log.error('dataset.url is %d' % len(dataset.url))
+                    self.error('dataset.url is %d' % len(dataset.url))
                 if len(dataset.license_url) > 200:
-                    log.error('dataset.license_url is %d' % len(dataset.license_url))
+                    self.error('dataset.license_url is %d' % len(dataset.license_url))
                 if len(dataset.maintainer_email) > 254:
-                    log.error('dataset.maintainer_email is %d' % len(dataset.maintainer_email))
+                    self.error('dataset.maintainer_email is %d' % len(dataset.maintainer_email))
                 if len(dataset.author_email) > 254:
-                    log.error('dataset.author_email is %d' % len(dataset.author_email))
+                    self.error('dataset.author_email is %d' % len(dataset.author_email))
         except KeyError as e:
-            log.error('%s missing key %s' % (source_url, e))
+            self.error('%s missing key %s' % (source_url, e))
 
 
 # Core CKAN fields.

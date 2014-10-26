@@ -8,7 +8,7 @@ class Dataset(models.Model):  # dcat:Dataset
     country_code = models.CharField(max_length=2)
     name = models.CharField(max_length=100)  # @see https://github.com/ckan/ckan/blob/master/ckan/model/package.py#L27
 
-    json = JSONField()
+    json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
     source_url = models.URLField(unique=True)
     extras_keys = ArrayField(dbtype='text')
@@ -20,7 +20,7 @@ class Dataset(models.Model):  # dcat:Dataset
     modified = models.DateTimeField(null=True)  # dct
     publisher = models.TextField(default='')  # dct
     identifier = models.TextField(default='')  # dct (not always a UUID)
-    keyword = JSONField()  # dcat
+    keyword = JSONField(default={})  # dcat
     maintainer = models.TextField(default='')
     maintainer_email = models.EmailField(default='')
     author = models.TextField(default='')
@@ -41,7 +41,7 @@ class Distribution(models.Model):  # dcat:Distribution
     dataset = models.ForeignKey('Dataset')
     _id = models.TextField(default='')  # (not always a UUID)
 
-    json = JSONField()
+    json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
 
     # @see http://www.w3.org/TR/vocab-dcat/

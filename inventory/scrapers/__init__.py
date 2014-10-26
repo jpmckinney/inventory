@@ -1,1 +1,3 @@
-from .ckan import CKANScraper
+from .ckan import CKAN
+
+classes = [CKAN]
