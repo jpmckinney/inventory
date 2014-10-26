@@ -21,7 +21,29 @@ catalogs = [
     Catalog('tz', 'http://opendata.go.tz/', scraper=CKAN),
     Catalog('us', 'http://catalog.data.gov/', scraper=CKAN),
     Catalog('uy', 'https://catalogodatos.gub.uy/', scraper=CKAN),
+
     # CKAN is hidden:
     # http://data.gouv.fr/
     # http://data.norge.no/
+
+    # Catalog('cl', 'http://datos.gob.cl/', scraper=Junar),
+    # Catalog('cr', 'http://datosabiertos.gob.go.cr/', scraper=Junar),
+    # Catalog('mk', 'http://opendata.gov.mk/', scraper=OGDI),
+    # Catalog('co', 'http://datos.gov.co/', scraper=OGDI),
+    # Catalog('gr', 'http://data.gov.gr/', scraper=OpenColibri),
+    # Catalog('ke', 'http://opendata.go.ke/', scraper=Socrata),
+
+    # Catalog('dk', 'http://data.digitaliser.dk/'),  # 757
+    # Catalog('es', 'http://datos.gob.es/'),  # 2572
+    # Catalog('fi', 'http://data.suomi.fi/'),  # <50
+    # Catalog('ge', 'http://data.gov.ge/'),
+    # Catalog('gh', 'http://data.gov.gh/'),  # 1068
+    # Catalog('il', 'http://data.gov.il/'),
+    # Catalog('jo', 'http://www.jordan.gov.jo/wps/portal/OpenData_en'),  # <100
+    # Catalog('kr', 'https://www.data.go.kr/'),  # 9268
+    # Catalog('lt', 'http://opendata.gov.lt/'),  # 262
+    # Catalog('mt', 'http://data.gov.mt/'),  # 4
+    # Catalog('nz', 'http://data.govt.nz/'),  # 2559
+    # Catalog('tn', 'http://data.gov.tn/'),  # 133
+    # Catalog('ua', 'http://data.gov.ua/'),  # 100
 ]

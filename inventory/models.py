@@ -1,16 +1,16 @@
 from django.db import models
 from djorm_pgarray.fields import ArrayField
 from jsonfield import JSONField
-from uuidfield import UUIDField
 
 
 class Dataset(models.Model):  # dcat:Dataset
-    country_code = models.CharField(max_length=2)
+    country_code = models.CharField(max_length=2, db_index=True)
     name = models.CharField(max_length=100)  # @see https://github.com/ckan/ckan/blob/master/ckan/model/package.py#L27
 
     json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
     source_url = models.URLField(unique=True)
+    extras = JSONField(default={})
     extras_keys = ArrayField(dbtype='text')
 
     # @see http://www.w3.org/TR/vocab-dcat/
@@ -32,6 +32,9 @@ class Dataset(models.Model):  # dcat:Dataset
     license_id = models.TextField(default='')
     license_url = models.URLField(default='')
     license_title = models.TextField(default='')
+
+    # Normalized properties
+    license = models.URLField(default='', db_index=True)  # dct
 
     class Meta:
         unique_together = (('country_code', 'name'),)

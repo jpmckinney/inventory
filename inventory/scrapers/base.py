@@ -1,5 +1,6 @@
 import logging
 
+
 class Scraper(object):
     def __init__(self, catalog):
         self.logger = logging.getLogger('inventory')

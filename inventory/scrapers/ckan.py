@@ -9,6 +9,7 @@ from django.db.utils import DataError
 from .base import Scraper
 from ..models import Dataset, Distribution
 
+citation_re = re.compile(r'\b(?:citation|mu[cs]t (?:acknowledge|cite|be attributed))\b')
 python_value_re = re.compile(r"\A\[u'")
 gb_open_license_re = re.compile(r'open government licen[sc]e', re.IGNORECASE)
 
@@ -77,12 +78,12 @@ class CKAN(Scraper):
 
         extras = {}
 
-        # Try to make values uniform for use below.
+        # Change extras from a list to a dictionary and make values uniform.
         for extra in package.get('extras', []):
             value = extra['value']
 
             if isinstance(value, str):
-                if python_value_re.match(value):
+                if python_value_re.search(value):
                     try:
                         value = literal_eval(value)
                     except ValueError as e:
@@ -92,20 +93,28 @@ class CKAN(Scraper):
                         value = json.loads(value)
                     except ValueError as e:
                         self.warning('%s %s %s' % (e, value, source_url))
-            if isinstance(value, list) and len(value) == 1:
-                value = value[0]
+            if isinstance(value, list):
+                try:
+                    value = list(set(value))
+                except TypeError:  # a list of dict is unhashable
+                    pass
+                if len(value) == 1:
+                    value = value[0]
             if not isinstance(value, str):  # Value must be hashable for next() call below.
                 value = json.dumps(value)
 
-            if extra['key'] in extras and extra['value'] != extras[extra['key']]:
-                self.warning('multiple %s %s' % (extra['key'], source_url))
-            elif value:  # no clobber
-                extras[extra['key']] = value
+            if value:
+                if extra['key'] in extras:  # no clobber
+                    if value != extras[extra['key']]:
+                        self.warning('multiple %s %s' % (extra['key'], source_url))
+                else:
+                    extras[extra['key']] = value
 
         dataset = self.find_or_initialize(Dataset, country_code=self.catalog.country_code, name=package['name'])
         dataset.json = package
-        dataset.custom_properties = list(package.keys() - ckan_dataset_properties)
+        dataset.custom_properties = [key for key, value in package.items() if value and key not in ckan_dataset_properties]
         dataset.source_url = source_url
+        dataset.extras = extras
         dataset.extras_keys = list(set(extras.keys()))
         for dataset_property, column_name in dataset_properties.items():
             if package.get(dataset_property):
@@ -121,8 +130,31 @@ class CKAN(Scraper):
             match = next((value for value in extras.values() if value in licence_url_to_license_id), None)
             if match:
                 license_id = licence_url_to_license_id[match]
-            elif self.catalog.country_code == 'gb' and extras.get('licence') == 'Open Government Licence':
-                license_id = 'uk-ogl'
+            # @note GB ought to clean up its licensing.
+            elif self.catalog.country_code == 'gb':
+                licence = extras.get('licence')
+                if licence in (
+                    'Contains public sector information licensed under the Open Government Licence v2.0',
+                    'Licence terms and conditions apply (Open Government Licence)',
+                    'Open Data available for use under the Open Government Licence',
+                    'Open Government Licence',
+                    'Open Government Licence - http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/',
+                    'Open Government Licence, http://www.nationalarchives.gov.uk/doc/open-government-licence',
+                    'Open Government Licence, http://www.nationalarchives.gov.uk/doc/open-government-licence/',
+                    'Open Government License',
+                    'Open Government License (http://www.nationalarchives.gov.uk/doc/open-government-licence/)',
+                    'Open Government License.',
+                    'Use of this data is subject to acceptance of the Open Government Licence',
+                    '["No conditions apply", "None", "Open Government License (OGL)"]',
+                    '["None", "Open Government License (OGL)"]',
+                ):
+                    license_id = 'uk-ogl'
+                elif 'www.naturalengland.org.uk/copyright/default.aspx' in licence:
+                    license_id = 'Natural England-OS Open Government Licence'
+                elif 'https://www.ordnancesurvey.co.uk/opendatadownload/products.html' in licence:
+                    license_id = 'OS OpenData Licence'
+                elif citation_re.search(licence):
+                    license_id = 'uk-citation-required'
             elif package.get('license_title') or package.get('license_url'):
                 self.warning('license_title or license_url but no license_id %s' % source_url)
 
@@ -135,7 +167,7 @@ class CKAN(Scraper):
         if extras.get('licence_url'):
             if package.get('license_url'):
                 if extras.get('licence_url') != package.get('license_url') and not (
-                    # @note AU's "licence_url" uses a different URL for "cc-by".
+                    # @note AU's "licence_url" uses a different, valid URL for "cc-by".
                     self.catalog.country_code == 'au' and
                     extras.get('licence_url') == 'http://www.opendefinition.org/licenses/cc-by' and
                     package.get('license_url') == 'http://creativecommons.org/licenses/by/3.0/au/'
@@ -160,7 +192,7 @@ class CKAN(Scraper):
             for resource in package['resources']:
                 distribution = self.find_or_initialize(Distribution, dataset=dataset, _id=resource['id'])
                 distribution.json = resource
-                distribution.custom_properties = list(resource.keys() - ckan_distribution_properties)
+                distribution.custom_properties = [key for key, value in resource.items() if value and key not in ckan_distribution_properties]
                 for distribution_property, column_name in distribution_properties.items():
                     if resource.get(distribution_property):
                         setattr(distribution, column_name, resource[distribution_property])
@@ -307,71 +339,18 @@ license_properties = frozenset([
 
 # GB often uses "extras" for licensing, but has no "licence_id" under "extras".
 licence_url_to_license_id = {
-    'http://inspire.halton.gov.uk/eul':
-        'Halton Licence (Inaccessible)',
-
-    'http://www.barrowbc.gov.uk/giscopyright':
-        'Barrow Borough Council Licence (Inaccessible)',
-
-    'http://broads-authority.gov.uk/copyright.html':
-        'Terms of Use for Broads Authority Information and Data',
-
-    'http://eidchub.ceh.ac.uk/administration-folder/tools/ceh-standard-licence-texts/grant-of-licence-for-web-mapping-services/plain':
-        'Centre for Ecology & Hydrology Natural Environment Research Council Licence',
-
-    'http://www.metoffice.gov.uk/about-us/legal/fair-usage':
-        'met-office-cp',
-
-    'http://www.nationalarchives.gov.uk/doc/open-government-licence/':
-        'uk-ogl',
     'http://ACwww.nationalarchives.gov.uk/doc/open-government-licence/':
+        'uk-ogl',
+    'http://www.nationalarchives.gov.uk/doc/open-government-licence/':
         'uk-ogl',
     'http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/':
         'uk-ogl',
     'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/':
         'uk-ogl',
-
-    'http://www.naturalengland.org.uk/copyright':
-        'Publicly accessible Natural England - OS OGL',
     'http://www.naturalengland.org.uk/copyright/default.aspx':
-        'Publicly accessible Natural England - OS OGL',
-
-    'http://www.ordnancesurvey.co.uk/oswebsite/licensing/index.html':
-        'Unspecified Ordnance Survey License',
-    'http://www.ordnancesurvey.co.uk/business-and-government/licensing/index.html':
-        'Unspecified Ordnance Survey License',
-
+        'Natural England-OS Open Government Licence',
     'http://www.ordnancesurvey.co.uk/docs/licences/os-opendata-licence.pdf':
-        'OS Open Data Licence',
+        'OS OpenData Licence',
     'http://www.ordnancesurvey.co.uk/oswebsite/docs/licences/os-opendata-licence.pdf':
-        'OS Open Data Licence',
-
-    'http://www.ordnancesurvey.co.uk/business-and-government/public-sector/mapping-agreements/psma-licensing.html':
-        'PSMA',
-
-    'http://www.ordnancesurvey.co.uk/business-and-government/public-sector/mapping-agreements/end-user-licence.html':
-        'Public Sector End User Licence',
-
-    'http://www.ordnancesurvey.co.uk/docs/licences/public-sector-end-user-licence-inspire.htm':
-        'Public Sector End User Licence - INSPIRE',
-    'http://www.ordnancesurvey.co.uk/business-and-government/public-sector/mapping-agreements/inspire-licence.h':
-        'Public Sector End User Licence - INSPIRE',
-    'http://www.ordnancesurvey.co.uk/business-and-government/public-sector/mapping-agreements/inspire-licence.htm':
-        'Public Sector End User Licence - INSPIRE',
-    'http://www.ordnancesurvey.co.uk/business-and-government/public-sector/mapping-agreements/inspire-licence.html':
-        'Public Sector End User Licence - INSPIRE',
-    'http://www.ordnancesurvey.co.uk/business-and-government /public-sector/mapping-agreements/inspire-licence.html':
-        'Public Sector End User Licence - INSPIRE',
-    'http://www.ordanancesurvey.co.uk/business-and-government/public-sector/mapping-agreements/inspire-license.html':
-        'Public Sector End User Licence - INSPIRE',
-
-    'http://www.ordnancesurvey.co.uk/business-and-government/licensing/licences/web-mapping-service-end-user-licence.html':
-        'Public Sector INSPIRE WMS End User Licence',
-    'http://www.ordnancesurvey.co.uk/business-and-government/licensing/licences/web-mapping-service-end-user-licence.html?utm_source=Web%2Bmapping%2Bservice%2Bviewer&utm_medium=Redirect&utm_term=wmseul&utm_campaign=INSPIRE':
-        'Public Sector INSPIRE WMS End User Licence',
-    'http://tinyurl.com/OS-INSPIRE-End-User-Licence':
-        'Public Sector INSPIRE WMS End User Licence',
-
-    'http://mapsonline.dundeecity.gov.uk/uat_dcc_gis_root/dcc_gis_config/app_config/INSPIRE/final-osma2-eul-inspire-wms-v1-0-readonly.pdf':
-        'Public Sector INSPIRE WMS End User Licence (Scotland)',
+        'OS OpenData Licence',
 }
