@@ -22,28 +22,30 @@ catalogs = [
     Catalog('us', 'http://catalog.data.gov/', scraper=CKAN),
     Catalog('uy', 'https://catalogodatos.gub.uy/', scraper=CKAN),
 
-    # CKAN is hidden:
-    # http://data.gouv.fr/
-    # http://data.norge.no/
+    # Over 1000:
+    # Catalog('fr', 'http://data.gouv.fr/'), # 13756 CKAN is hidden API https://www.data.gouv.fr/fr/apidoc/
+    # Catalog('kr', 'https://www.data.go.kr/'),  # 9268 API
+    # Catalog('es', 'http://datos.gob.es/'),  # 2572 Drupal http://datos.gob.es/sites/default/files/catalogo.rdf
+    # Catalog('nz', 'http://data.govt.nz/'),  # 2559 SilverStripe RSS
+    # Catalog('cl', 'http://datos.gob.cl/', scraper=Junar),  # 1176
+    # Catalog('cr', 'http://datosabiertos.gob.go.cr/', scraper=Junar),  # 250
+    # Catalog('gh', 'http://data.gov.gh/'),  # 1068 OGPL http://data.gov.gh/dataset-rss.xml
 
-    # Catalog('cl', 'http://datos.gob.cl/', scraper=Junar),
-    # Catalog('cr', 'http://datosabiertos.gob.go.cr/', scraper=Junar),
-    # Catalog('mk', 'http://opendata.gov.mk/', scraper=OGDI),
-    # Catalog('co', 'http://datos.gov.co/', scraper=OGDI),
-    # Catalog('gr', 'http://data.gov.gr/', scraper=OpenColibri),
-    # Catalog('ke', 'http://opendata.go.ke/', scraper=Socrata),
-
+    # Over 100:
+    # Catalog('co', 'http://datos.gov.co/', scraper=OGDI),  # 672
+    # Catalog('mk', 'http://opendata.gov.mk/', scraper=OGDI),  # 154
     # Catalog('dk', 'http://data.digitaliser.dk/'),  # 757
-    # Catalog('es', 'http://datos.gob.es/'),  # 2572
-    # Catalog('fi', 'http://data.suomi.fi/'),  # <50
-    # Catalog('ge', 'http://data.gov.ge/'),
-    # Catalog('gh', 'http://data.gov.gh/'),  # 1068
-    # Catalog('il', 'http://data.gov.il/'),
-    # Catalog('jo', 'http://www.jordan.gov.jo/wps/portal/OpenData_en'),  # <100
-    # Catalog('kr', 'https://www.data.go.kr/'),  # 9268
+    # Catalog('ke', 'http://opendata.go.ke/', scraper=Socrata),  # 600
+    # Catalog('no', 'http://data.norge.no/'), # 420 CKAN is hidden Drupal http://data.norge.no/taxonomy/term/###/all/feed?page=#
     # Catalog('lt', 'http://opendata.gov.lt/'),  # 262
+    # Catalog('il', 'http://data.gov.il/'),  # 243 Drupal
+    # Catalog('tn', 'http://data.gov.tn/'),  # 133 Joomla! pagination, tabular
+    # Catalog('ua', 'http://data.gov.ua/'),  # 100 Drupal RDFa, /api/action/package_list returns the dcterms:identifier of datasets
+
+    # Under 100:
+    # Catalog('jo', 'http://www.jordan.gov.jo/wps/portal/OpenData_en'),  # <100
+    # Catalog('fi', 'http://data.suomi.fi/'),  # <50
+    # Catalog('gr', 'http://data.gov.gr/', scraper=OpenColibri),  # 14
+    # Catalog('ge', 'http://data.gov.ge/'),  # 14
     # Catalog('mt', 'http://data.gov.mt/'),  # 4
-    # Catalog('nz', 'http://data.govt.nz/'),  # 2559
-    # Catalog('tn', 'http://data.gov.tn/'),  # 133
-    # Catalog('ua', 'http://data.gov.ua/'),  # 100
 ]
