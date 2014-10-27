@@ -193,6 +193,7 @@ class CKAN(Scraper):
                 distribution = self.find_or_initialize(Distribution, dataset=dataset, _id=resource['id'])
                 distribution.json = resource
                 distribution.custom_properties = [key for key, value in resource.items() if value and key not in ckan_distribution_properties]
+                distribution.country_code = dataset.country_code
                 for distribution_property, column_name in distribution_properties.items():
                     if resource.get(distribution_property):
                         setattr(distribution, column_name, resource[distribution_property])
@@ -266,12 +267,13 @@ ckan_dataset_properties = frozenset([
 ])
 ckan_distribution_properties = frozenset([
     # Modeled
-    'id',
     'created',
     'description',
     'format',
-    'mimetype',
+    'id',
     'last_modified',
+    'mimetype',
+    'mimetype_inner',
     'name',
     'size',
     'url',
@@ -280,7 +282,6 @@ ckan_distribution_properties = frozenset([
     'cache_last_updated',
     'cache_url',
     'hash',
-    'mimetype_inner',
     'position',
     'resource_group_id',
     'resource_type',
@@ -322,7 +323,8 @@ distribution_properties = {
     'last_modified': 'modified',
     'url': 'accessURL',
     'size': 'byteSize',
-    'mimetype': 'mediaType',
+    'mimetype': 'mimetype',
+    'mimetype_inner': 'mimetype_inner',
     'format': 'format',
 
     # CKAN doesn't have:

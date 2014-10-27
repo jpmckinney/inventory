@@ -4,11 +4,13 @@ from jsonfield import JSONField
 
 
 class Dataset(models.Model):  # dcat:Dataset
+    # Identification and common fields
     country_code = models.CharField(max_length=2, db_index=True)
     name = models.CharField(max_length=100)  # @see https://github.com/ckan/ckan/blob/master/ckan/model/package.py#L27
-
     json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
+
+    # Additional fields
     source_url = models.URLField(unique=True)
     extras = JSONField(default={})
     extras_keys = ArrayField(dbtype='text')
@@ -33,7 +35,7 @@ class Dataset(models.Model):  # dcat:Dataset
     license_url = models.URLField(default='')
     license_title = models.TextField(default='')
 
-    # Normalized properties
+    # Clean properties
     license = models.URLField(default='', db_index=True)  # dct
 
     class Meta:
@@ -41,21 +43,28 @@ class Dataset(models.Model):  # dcat:Dataset
 
 
 class Distribution(models.Model):  # dcat:Distribution
+    # Identification and common fields
     dataset = models.ForeignKey('Dataset')
     _id = models.TextField(default='')  # (not always a UUID)
-
     json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
 
+    # Additional fields
+    country_code = models.CharField(max_length=2, db_index=True)
+
     # @see http://www.w3.org/TR/vocab-dcat/
-    name = models.TextField(default='')  # dct
+    title = models.TextField(default='')  # dct
     description = models.TextField(default='')  # dct
-    created = models.DateTimeField(null=True)  # dct
-    last_modified = models.DateTimeField(null=True)  # dct
-    url = models.URLField(default='', max_length=2000)  # dcat (length 1692 observed)
-    size = models.BigIntegerField(null=True)  # dcat
-    mimetype = models.TextField(default='')  # dcat
+    issued = models.DateTimeField(null=True)  # dct
+    modified = models.DateTimeField(null=True)  # dct
+    accessURL = models.URLField(default='', max_length=2000)  # dcat (length 1692 observed)
+    byteSize = models.BigIntegerField(null=True)  # dcat
+    mimetype = models.TextField(default='')
+    mimetype_inner = models.TextField(default='')
     format = models.TextField(default='')  # dct
+
+    # Clean properties
+    mediaType = models.TextField(default='', db_index=True)  # dcat
 
     class Meta:
         unique_together = (('dataset', '_id'),)

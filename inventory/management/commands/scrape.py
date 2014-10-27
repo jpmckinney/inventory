@@ -91,4 +91,4 @@ class Command(BaseCommand):
 
     def scrape(self, scraper):
         scraper.scrape()
-        logger.info('%s done' % scraper)
+        logger.info('{} done'.format(scraper))
