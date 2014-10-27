@@ -25,6 +25,6 @@ class Command(InventoryCommand):
     def report(self, klass, field, *, distinct):
         for country_code in self.country_codes():
             count = Dataset.objects.filter(country_code=country_code).count()
-            print(country_code)
+            print('{} ({})'.format(country_code, count))
             for value in klass.objects.filter(country_code=country_code).values(field).annotate(count=Count(distinct, distinct=True)).order_by('count'):
                 print('  {:7.2%} {} ({})'.format(value['count'] / count, value[field], value['count']))

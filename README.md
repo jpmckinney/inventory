@@ -17,6 +17,18 @@ Scrape select CKAN APIs:
 
     ./manage.py scrape ca us
 
+Normalize licenses and media types:
+
+    ./manage.py normalize --licenses --media-types
+
+Read a report on license usage:
+
+    ./manage.py report --licenses
+
+Read a report on media type usage:
+
+    ./manage.py report --media-types
+
 ## Bugs? Questions?
 
 This project's main repository is on GitHub: [http://github.com/opennorth/inventory](http://github.com/opennorth/inventory), where your contributions, forks, bug reports, feature requests, and feedback are greatly welcomed.

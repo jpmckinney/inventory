@@ -117,10 +117,10 @@ class CKAN(Scraper):
         dataset.extras = extras
         dataset.extras_keys = list(set(extras.keys()))
         for dataset_property, column_name in dataset_properties.items():
-            if package.get(dataset_property):
+            if package.get(dataset_property) is not None:
                 setattr(dataset, column_name, package[dataset_property])
         for license_property in license_properties:
-            if package.get(license_property):
+            if package.get(license_property) is not None:
                 setattr(dataset, license_property, package[license_property])
 
         # Determine the license_id.
@@ -195,7 +195,7 @@ class CKAN(Scraper):
                 distribution.custom_properties = [key for key, value in resource.items() if value and key not in ckan_distribution_properties]
                 distribution.country_code = dataset.country_code
                 for distribution_property, column_name in distribution_properties.items():
-                    if resource.get(distribution_property):
+                    if resource.get(distribution_property) is not None:
                         setattr(distribution, column_name, resource[distribution_property])
 
                 distribution.save()

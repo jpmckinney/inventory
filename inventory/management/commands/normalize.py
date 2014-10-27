@@ -78,6 +78,21 @@ class Command(InventoryCommand):
             self.info('Normalizing licenses...')
             qs = Dataset.objects.filter(license='')
 
+            # BR http://dados.gov.br/
+            # BR rarely takes advantage of CKAN's per-dataset licensing.
+            qs.filter(country_code='br', license_id__in=('notspecified', '')).update(license='http://creativecommons.org/licenses/by-sa/3.0/')
+            # ID http://data.id/lisensi-dan-atribusi.html
+            qs.filter(country_code='id', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/4.0/')
+            # IT http://www.dati.gov.it/content/note-legali
+            qs.filter(country_code='it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
+            # MD http://data.gov.md/ro/termeni-si-conditii
+            # MD doesn't take advantage of CKAN's per-dataset licensing.
+            qs.filter(country_code='md', license_id='notspecified').update(license='http://data.gov.md/en/terms-and-conditions')
+            # MX displays "Libro Uso MX" when license_id is "unspecified" or blank.
+            # MX rarely takes advantage of CKAN's per-dataset licensing.
+            qs.filter(country_code='mx', license_id__in=('notspecified', '')).update(license='http://datos.gob.mx/libreusomx/')
+            # PH http://data.gov.ph/about/data-policy-statement
+            qs.filter(country_code='ph', license_id='notspecified').update(license='http://example.com/publicdomain')
             # UK and RO use the same license ID for different licenses.
             qs.filter(country_code='gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/')
             qs.filter(country_code='ro', license_id='uk-ogl').update(license='http://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf')
@@ -146,21 +161,23 @@ license_ids = {
     'iodl1': 'http://www.formez.it/iodl/',
     'iodl2': 'http://www.dati.gov.it/iodl/2.0/',
     # NL
-    'publiek-domein': 'http://example.com/public-domain',  # No URL
-    # UY
-    'odc-uy': 'http://example.com/odc-uy',  # No URL
-
-    # Imprecise
-    'Attribution (CC-BY)':             'http://creativecommons.org/licenses/by/',
+    # https://data.overheid.nl/data/
+    'publiek-domein': 'http://creativecommons.org/publicdomain/mark/1.0/',
+    # PH
+    'Attribution (CC-BY)': 'http://creativecommons.org/licenses/by/',
     'Attribution-Share Alike (BY-SA)': 'http://creativecommons.org/licenses/by-sa/',
+    # UY
+    # https://catalogodatos.gub.uy/
+    'odc-uy': 'http://datos.gub.uy/wps/wcm/connect/856cc1804db0463baa8bea01b72d8394/terminos-catalogodatos.pdf?MOD=AJPERES&ContentCache=NONE&CACHEID=856cc1804db0463baa8bea01b72d8394',
+
     # Generic
-    'notspec':      'http://example.com/unknown',
-    'notspecified': 'http://example.com/unknown',
-    'other-at':     'http://example.com/unknown',
-    'other-closed': 'http://example.com/unknown',
-    'other-nc':     'http://example.com/unknown',
-    'other-open':   'http://example.com/unknown',
-    'other-pd':     'http://example.com/unknown',
+    'notspec':      'http://example.com/notspecified',
+    'notspecified': 'http://example.com/notspecified',
+    'other-at':     'http://example.com/other-at',
+    'other-closed': 'http://example.com/other-closed',
+    'other-nc':     'http://example.com/other-nc',
+    'other-open':   'http://example.com/other-open',
+    'other-pd':     'http://example.com/other-pd',
 }
 license_urls = {
     'http://creativecommons.org/licenses/by/3.0/au/':  'http://creativecommons.org/licenses/by/3.0/au/',
