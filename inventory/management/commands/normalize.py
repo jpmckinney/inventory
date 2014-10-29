@@ -79,10 +79,6 @@ class Command(InventoryCommand):
             self.info('Normalizing licenses...')
             qs = Dataset.objects.filter(license='')
 
-            # BR http://dados.gov.br/
-            # BR doesn't take advantage of CKAN's per-dataset licensing, half the time.
-            # qs = Dataset.objects.filter(country_code='br'); qs.filter(license_id='').count() / qs.count()
-            qs.filter(country_code='br', license_id='').update(license='http://creativecommons.org/licenses/by-sa/3.0/')
             # MD http://data.gov.md/ro/termeni-si-conditii
             # MD doesn't take advantage of CKAN's per-dataset licensing.
             # qs = Dataset.objects.filter(country_code='md'); qs.filter(license_id='notspecified').count() / qs.count()
@@ -96,6 +92,9 @@ class Command(InventoryCommand):
             qs.filter(country_code='id', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/4.0/')
             # IT http://www.dati.gov.it/content/note-legali
             qs.filter(country_code='it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
+            # PH confirmed via email.
+            qs.filter(country_code='ph', license_id='Attribution (CC-BY)').update(license='http://creativecommons.org/licenses/by/3.0/ph/')
+
             # UK and RO use the same license ID for different licenses.
             qs.filter(country_code='gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/')
             qs.filter(country_code='ro', license_id='uk-ogl').update(license='http://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf')
