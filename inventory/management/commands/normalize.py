@@ -30,10 +30,11 @@ class Command(InventoryCommand):
                     mimetypes.add_type(type, ext)
 
             for distribution in qs:
-                # @todo mimetype_inner: Distribution.objects.exclude(mimetype_inner='').count()
                 # @todo Since there are so many warnings, we can instead count
                 #   the number of similar mismatches, and keep one example with
                 #   original values.
+
+                # @todo mimetype_inner: Distribution.objects.exclude(mimetype_inner='').count()
 
                 guesses = {
                     'mimetype': None,
@@ -79,20 +80,22 @@ class Command(InventoryCommand):
             qs = Dataset.objects.filter(license='')
 
             # BR http://dados.gov.br/
-            # BR rarely takes advantage of CKAN's per-dataset licensing.
-            qs.filter(country_code='br', license_id__in=('notspecified', '')).update(license='http://creativecommons.org/licenses/by-sa/3.0/')
+            # BR doesn't take advantage of CKAN's per-dataset licensing, half the time.
+            # qs = Dataset.objects.filter(country_code='br'); qs.filter(license_id='').count() / qs.count()
+            qs.filter(country_code='br', license_id='').update(license='http://creativecommons.org/licenses/by-sa/3.0/')
+            # MD http://data.gov.md/ro/termeni-si-conditii
+            # MD doesn't take advantage of CKAN's per-dataset licensing.
+            # qs = Dataset.objects.filter(country_code='md'); qs.filter(license_id='notspecified').count() / qs.count()
+            qs.filter(country_code='md', license_id='notspecified').update(license='http://data.gov.md/en/terms-and-conditions')
+            # MX displays "Libro Uso MX" for all datasets.
+            # cc-by http://catalogo.datos.gob.mx/dataset/mexico-prospero-estadisticas-nacionales
+            # notspecified http://catalogo.datos.gob.mx/dataset/niveles-actuales-de-rios
+            qs.filter(country_code='mx', license_id__in=('cc-by', 'notspecified', '')).update(license='http://datos.gob.mx/libreusomx/')
+
             # ID http://data.id/lisensi-dan-atribusi.html
             qs.filter(country_code='id', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/4.0/')
             # IT http://www.dati.gov.it/content/note-legali
             qs.filter(country_code='it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
-            # MD http://data.gov.md/ro/termeni-si-conditii
-            # MD doesn't take advantage of CKAN's per-dataset licensing.
-            qs.filter(country_code='md', license_id='notspecified').update(license='http://data.gov.md/en/terms-and-conditions')
-            # MX displays "Libro Uso MX" when license_id is "unspecified" or blank.
-            # MX rarely takes advantage of CKAN's per-dataset licensing.
-            qs.filter(country_code='mx', license_id__in=('notspecified', '')).update(license='http://datos.gob.mx/libreusomx/')
-            # PH http://data.gov.ph/about/data-policy-statement
-            qs.filter(country_code='ph', license_id='notspecified').update(license='http://example.com/publicdomain')
             # UK and RO use the same license ID for different licenses.
             qs.filter(country_code='gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/')
             qs.filter(country_code='ro', license_id='uk-ogl').update(license='http://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf')
