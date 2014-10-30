@@ -92,8 +92,6 @@ class Command(InventoryCommand):
             qs.filter(country_code='id', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/4.0/')
             # IT http://www.dati.gov.it/content/note-legali
             qs.filter(country_code='it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
-            # PH confirmed via email.
-            qs.filter(country_code='ph', license_id='Attribution (CC-BY)').update(license='http://creativecommons.org/licenses/by/3.0/ph/')
 
             # UK and RO use the same license ID for different licenses.
             qs.filter(country_code='gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/')
@@ -143,6 +141,11 @@ license_ids = {
     'cc0':                                     'http://creativecommons.org/publicdomain/zero/1.0/',
     'creative-commons-attribution-cc-by-':     'http://creativecommons.org/licenses/by/3.0/nl/',
     'naamsvermelding---gelijkdelen-cc-by-sa-': 'http://creativecommons.org/licenses/by-sa/3.0/nl/',
+    # NL https://data.overheid.nl/data/
+    'publiek-domein':                          'http://creativecommons.org/publicdomain/mark/1.0/',
+    # PH confirmed via email
+    'Attribution (CC-BY)':                     'http://creativecommons.org/licenses/by/3.0/ph/',
+    'Attribution-Share Alike (BY-SA)':         'http://creativecommons.org/licenses/by-sa/',
     # Open Data Commons
     'odc-by':   'http://opendatacommons.org/licenses/by/1.0/',
     'odc-odbl': 'http://opendatacommons.org/licenses/odbl/1.0/',
@@ -162,12 +165,6 @@ license_ids = {
     # IT
     'iodl1': 'http://www.formez.it/iodl/',
     'iodl2': 'http://www.dati.gov.it/iodl/2.0/',
-    # NL
-    # https://data.overheid.nl/data/
-    'publiek-domein': 'http://creativecommons.org/publicdomain/mark/1.0/',
-    # PH
-    'Attribution (CC-BY)': 'http://creativecommons.org/licenses/by/',
-    'Attribution-Share Alike (BY-SA)': 'http://creativecommons.org/licenses/by-sa/',
     # UY
     # https://catalogodatos.gub.uy/
     'odc-uy': 'http://datos.gub.uy/wps/wcm/connect/856cc1804db0463baa8bea01b72d8394/terminos-catalogodatos.pdf?MOD=AJPERES&ContentCache=NONE&CACHEID=856cc1804db0463baa8bea01b72d8394',
@@ -182,14 +179,15 @@ license_ids = {
     'other-pd':     'http://example.com/other-pd',
 }
 license_urls = {
+    # Identical
     'http://creativecommons.org/licenses/by/3.0/au/':  'http://creativecommons.org/licenses/by/3.0/au/',
     'http://creativecommons.org/licenses/by-nc/2.0/':  'http://creativecommons.org/licenses/by-nc/2.0/',
-    # Imprecise
-    'http://www.opendefinition.org/licenses/cc-by':    'http://creativecommons.org/licenses/by/',
-    'http://www.opendefinition.org/licenses/cc-by-sa': 'http://creativecommons.org/licenses/by-sa/',
     'http://creativecommons.org/licenses/by-nc-nd/':   'http://creativecommons.org/licenses/by-nc-nd/',
     'http://creativecommons.org/licenses/by-nc-sa':    'http://creativecommons.org/licenses/by-nc-sa/',
     'http://creativecommons.org/licenses/by-nd/':      'http://creativecommons.org/licenses/by-nd/',
+    # Correction
+    'http://www.opendefinition.org/licenses/cc-by':    'http://creativecommons.org/licenses/by/',
+    'http://www.opendefinition.org/licenses/cc-by-sa': 'http://creativecommons.org/licenses/by-sa/',
 }
 license_titles = {
     'cc-nc':    'http://creativecommons.org/licenses/nc/1.0/',
@@ -198,8 +196,9 @@ license_titles = {
     'cc-by-nd': 'http://creativecommons.org/licenses/by-nd/',
     'cc-by-sa': 'http://creativecommons.org/licenses/by-sa/',
     # Generic
-    'License Not Specified': 'http://example.com/unknown',
+    'License Not Specified': 'http://example.com/notspecified',
 }
+
 
 # Additional media types.
 types = (
