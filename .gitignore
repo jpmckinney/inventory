@@ -1,2 +1,4 @@
 /inventory_cache.sqlite
 /action-plans
+*.DS_Store
+*__pycache__

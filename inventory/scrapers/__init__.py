@@ -1,5 +1,6 @@
 from .base import Catalog
 from .ckan import CKAN
+from .socrata import Socrata
 
 catalogs = [
     Catalog('ar', 'http://datospublicos.gob.ar/data/', scraper=CKAN),
@@ -21,6 +22,7 @@ catalogs = [
     Catalog('tz', 'http://opendata.go.tz/', scraper=CKAN),
     Catalog('us', 'http://catalog.data.gov/', scraper=CKAN),
     Catalog('uy', 'https://catalogodatos.gub.uy/', scraper=CKAN),
+    Catalog('ke', 'https://opendata.go.ke/', scraper=Socrata)
 
     # Over 1000:
     # Catalog('fr', 'http://data.gouv.fr/'), # 13756 CKAN is hidden API https://www.data.gouv.fr/fr/apidoc/
