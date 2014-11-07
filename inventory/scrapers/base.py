@@ -25,6 +25,12 @@ class Scraper(object):
         except klass.DoesNotExist:
             return klass(**options)
 
+    def get_packages(self):
+        raise NotImplementedError('Please implement this method')
+
+    def save_package(self, package):
+        raise NotImplementedError('Please implement this method')
+
 
 class Catalog(object):
     def __init__(self, country_code, url, *, scraper, get_only=True, parameters={}):
