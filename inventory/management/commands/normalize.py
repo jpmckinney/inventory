@@ -9,6 +9,8 @@ mimetypes.init()
 
 
 class Command(InventoryCommand):
+    help = 'Normalizes property values'
+
     option_list = InventoryCommand.option_list + (
         make_option('--licenses', action='store_true', dest='licenses',
                     default=False,
@@ -19,11 +21,20 @@ class Command(InventoryCommand):
     )
 
     def handle(self, *args, **options):
+        self.setup(*args, **options)
+
+        if args:
+            criteria = {'country_code__in': [catalog.country_code for catalog in self.catalogs]}
+        else:
+            criteria = {}
+
         self.warnings = 0
 
         if options['media_types']:
             self.info('Normalizing media types...')
-            qs = Distribution.objects.filter(mediaType='')
+            kwargs = criteria.copy()
+            kwargs['mediaType'] = ''
+            qs = Distribution.objects.filter(**kwargs)
 
             for type, ext in types:
                 if not mimetypes.types_map.get(ext):
@@ -34,7 +45,7 @@ class Command(InventoryCommand):
                 #   the number of similar mismatches, and keep one example with
                 #   original values.
 
-                # @todo mimetype_inner: Distribution.objects.exclude(mimetype_inner='').count()
+                # @todo mimetype_inner (br, uy, it): Distribution.objects.exclude(mimetype_inner='').count()
 
                 guesses = {
                     'mimetype': None,
@@ -77,7 +88,9 @@ class Command(InventoryCommand):
 
         if options['licenses']:
             self.info('Normalizing licenses...')
-            qs = Dataset.objects.filter(license='')
+            kwargs = criteria.copy()
+            kwargs['license'] = ''
+            qs = Dataset.objects.filter(**kwargs)
 
             # MD http://data.gov.md/ro/termeni-si-conditii
             # MD doesn't take advantage of CKAN's per-dataset licensing.

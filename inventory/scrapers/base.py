@@ -3,14 +3,14 @@ import logging
 
 class Scraper(object):
     def __init__(self, catalog):
+        self.catalog = catalog
+
         self.logger = logging.getLogger('inventory')
         self.info = self.logger.info
         self.debug = self.logger.debug
         self.warning = self.logger.warning
         self.error = self.logger.error
         self.critical = self.logger.critical
-
-        self.catalog = catalog
 
     def __str__(self):
         return str(self.catalog)
