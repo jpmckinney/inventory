@@ -1,8 +1,8 @@
 require 'csvlint'
 
-
-File.open("/Users/steph/Desktop/cvslint/list.txt", "r") do |file_handle|
-  file_handle.each_line do |url|
+if ARGV.length > 0
+  url = ARGV.first.chomp
+end
 
     opts = {
         "header" => true,
@@ -45,6 +45,3 @@ File.open("/Users/steph/Desktop/cvslint/list.txt", "r") do |file_handle|
 
     json = output.to_json 
     puts json
-
-  end
-end
