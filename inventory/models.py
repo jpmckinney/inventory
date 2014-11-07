@@ -22,12 +22,18 @@ class Dataset(models.Model):  # dcat:Dataset
     modified = models.DateTimeField(null=True)  # dct
     publisher = models.TextField(default='')  # dct
     identifier = models.TextField(default='')  # dct (not always a UUID)
-    keyword = JSONField(default={})  # dcat
+    theme = ArrayField(dbtype='text')  # dcat
+    keyword = ArrayField(dbtype='text')  # dcat
+    contactPoint = models.TextField(default='')  # dcat
     maintainer = models.TextField(default='')
     maintainer_email = models.EmailField(default='')
     author = models.TextField(default='')
     author_email = models.EmailField(default='')
     landingPage = models.URLField(default='', max_length=500)  # dcat (length 401 observed)
+
+    # @see http://project-open-data.github.io/v1.1/schema/
+    # @see http://project-open-data.github.io/v1.1/schema/#accessLevel
+    accessLevel = models.TextField(default='')
 
     # License properties
     isopen = models.NullBooleanField()

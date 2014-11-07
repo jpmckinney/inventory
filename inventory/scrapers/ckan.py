@@ -123,6 +123,13 @@ class CKAN(Scraper):
             if package.get(license_property) is not None:
                 setattr(dataset, license_property, package[license_property])
 
+        # "name" is always equal to "display_name", "vocabulary_id" is
+        # either null or opaque, and "state" is always "active".
+        # SELECT DISTINCT t FROM (SELECT json_array_elements(keyword)->>'vocabulary_id' t FROM inventory_dataset WHERE keyword::text <> '{}'::text) v WHERE t IS NOT NULL;
+        # SELECT t FROM (SELECT json_array_elements(keyword)->>'state' t FROM inventory_dataset WHERE keyword::text <> '{}'::text) v WHERE t != 'active';
+        # SELECT a, b FROM (SELECT json_array_elements(keyword)->>'name' a, json_array_elements(keyword)->>'display_name' b FROM inventory_dataset WHERE keyword::text <> '{}'::text) v WHERE a != b;
+        dataset.keyword = [tag['name'] for tag in package.get('tags', [])]
+
         # Determine the license_id.
         license_id = package.get('license_id')
         if not license_id:
@@ -199,7 +206,6 @@ class CKAN(Scraper):
                         setattr(distribution, column_name, resource[distribution_property])
 
                 distribution.save()
-
         except DataError as e:
             try:
                 if len(distribution.accessURL) > 2000:
@@ -302,7 +308,6 @@ dataset_properties = {
     'metadata_modified': 'modified',
     'owner_org': 'publisher',
     'id': 'identifier',
-    'tags': 'keyword',
     'maintainer': 'maintainer',  # dcat:contactPoint vcard:fn
     'maintainer_email': 'maintainer_email',  # dcat:contactPoint vcard:hasEmail
     'author': 'author',  # dcat:contactPoint vcard:fn

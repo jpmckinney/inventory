@@ -22,7 +22,7 @@ catalogs = [
     Catalog('tz', 'http://opendata.go.tz/', scraper=CKAN),
     Catalog('us', 'http://catalog.data.gov/', scraper=CKAN),
     Catalog('uy', 'https://catalogodatos.gub.uy/', scraper=CKAN),
-    Catalog('ke', 'https://opendata.go.ke/', scraper=Socrata)
+    Catalog('ke', 'https://opendata.go.ke/', scraper=Socrata),
 
     # Over 1000:
     # Catalog('fr', 'http://data.gouv.fr/'), # 13756 CKAN is hidden API https://www.data.gouv.fr/fr/apidoc/
@@ -37,7 +37,6 @@ catalogs = [
     # Catalog('co', 'http://datos.gov.co/', scraper=OGDI),  # 672
     # Catalog('mk', 'http://opendata.gov.mk/', scraper=OGDI),  # 154
     # Catalog('dk', 'http://data.digitaliser.dk/'),  # 757
-    # Catalog('ke', 'http://opendata.go.ke/', scraper=Socrata),  # 600
     # Catalog('no', 'http://data.norge.no/'), # 420 CKAN is hidden Drupal http://data.norge.no/taxonomy/term/###/all/feed?page=#
     # Catalog('lt', 'http://opendata.gov.lt/'),  # 262
     # Catalog('il', 'http://data.gov.il/'),  # 243 Drupal
