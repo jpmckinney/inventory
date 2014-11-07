@@ -25,12 +25,6 @@ class Command(InventoryCommand):
     def handle(self, *args, **options):
         self.setup(*args, **options)
 
-        for catalog in self.catalogs:
-            print(catalog)
-
-        if options['dry_run']:
-            exit(0)
-
         # @see http://requests-cache.readthedocs.org/en/latest/api.html#requests_cache.core.install_cache
         if options['cache']:
             cache_options = {}
@@ -39,7 +33,7 @@ class Command(InventoryCommand):
             requests_cache.install_cache('inventory_cache', allowable_methods=('HEAD', 'GET', 'POST'), **cache_options)
 
         processes = [
-            Process(target=self.scrape, args=(catalog,))
+            Process(target=self.scrape, args=(catalog,), kwargs={'dry_run': options['dry_run']})
             for catalog in self.catalogs
         ]
 
@@ -56,6 +50,7 @@ class Command(InventoryCommand):
         for process in processes:
             process.join()
 
-    def scrape(self, catalog):
-        catalog.scraper(catalog).scrape()
+    def scrape(self, catalog, *, dry_run=False):
+        if not dry_run:
+            catalog.scraper(catalog).scrape()
         self.info('{} done'.format(catalog))

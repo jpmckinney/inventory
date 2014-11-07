@@ -41,10 +41,6 @@ class Command(InventoryCommand):
                     mimetypes.add_type(type, ext)
 
             for distribution in qs:
-                # @todo Since there are so many warnings, we can instead count
-                #   the number of similar mismatches, and keep one example with
-                #   original values.
-
                 # @todo mimetype_inner (br, uy, it): Distribution.objects.exclude(mimetype_inner='').count()
 
                 guesses = {
