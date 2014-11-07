@@ -11,6 +11,7 @@ catalogs = [
     Catalog('id', 'http://data.id/', scraper=CKAN),
     Catalog('ie', 'http://data.gov.ie/', scraper=CKAN),
     Catalog('it', 'http://www.dati.gov.it/catalog/', scraper=CKAN),
+    Catalog('ke', 'https://opendata.go.ke/', scraper=Socrata),
     Catalog('md', 'http://data.gov.md/ckan', scraper=CKAN),
     Catalog('mx', 'http://catalogo.datos.gob.mx/', scraper=CKAN),
     Catalog('nl', 'https://data.overheid.nl/data/', scraper=CKAN, get_only=False),
@@ -22,7 +23,6 @@ catalogs = [
     Catalog('tz', 'http://opendata.go.tz/', scraper=CKAN),
     Catalog('us', 'http://catalog.data.gov/', scraper=CKAN),
     Catalog('uy', 'https://catalogodatos.gub.uy/', scraper=CKAN),
-    Catalog('ke', 'https://opendata.go.ke/', scraper=Socrata),
 
     # Over 1000:
     # Catalog('fr', 'http://data.gouv.fr/'), # 13756 CKAN is hidden API https://www.data.gouv.fr/fr/apidoc/
