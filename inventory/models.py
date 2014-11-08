@@ -68,6 +68,12 @@ class Distribution(models.Model):  # dcat:Distribution
     mimetype = models.TextField(default='')
     mimetype_inner = models.TextField(default='')
     format = models.TextField(default='')  # dct
+    validation_errors = models.TextField(null=True)
+    validation_encoding = models.TextField(null=True)
+    validation_headers = models.TextField(null=True)
+    validation_content_type = models.TextField(null=True)
+    valid = models.NullBooleanField(null=True)
+
 
     # Clean properties
     mediaType = models.TextField(default='', db_index=True)  # dcat
