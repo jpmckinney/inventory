@@ -47,6 +47,9 @@ class Dataset(models.Model):  # dcat:Dataset
     class Meta:
         unique_together = (('country_code', 'name'),)
 
+    def __str__(self):
+        return '{}: {}'.format(self.country_code, self.name)
+
 
 class Distribution(models.Model):  # dcat:Distribution
     # Identification and common fields
@@ -80,3 +83,6 @@ class Distribution(models.Model):  # dcat:Distribution
 
     class Meta:
         unique_together = (('dataset', '_id'),)
+
+    def __str__(self):
+        return '{}: {} {}'.format(self.country_code, self.dataset, self._id)

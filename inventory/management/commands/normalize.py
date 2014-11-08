@@ -1,5 +1,6 @@
 import mimetypes
 import re
+from collections import OrderedDict
 from optparse import make_option
 
 from . import InventoryCommand
@@ -28,59 +29,102 @@ class Command(InventoryCommand):
         else:
             criteria = {}
 
-        self.warnings = 0
-
         if options['media_types']:
             self.info('Normalizing media types...')
             kwargs = criteria.copy()
             kwargs['mediaType'] = ''
             qs = Distribution.objects.filter(**kwargs)
 
-            for type, ext in types:
-                if not mimetypes.types_map.get(ext):
-                    mimetypes.add_type(type, ext)
+            for media_type, extension in types:
+                if not mimetypes.types_map.get(extension):
+                    mimetypes.add_type(media_type, extension)
 
+            self.warnings = {}
+            self.warnings_count = 0
+
+            # @todo mimetype_inner (br, uy, it): Distribution.objects.exclude(mimetype_inner='').count()
             for distribution in qs:
-                # @todo mimetype_inner (br, uy, it): Distribution.objects.exclude(mimetype_inner='').count()
+                self.save = True
 
                 guesses = {
-                    'mimetype': None,
-                    'format': None,
-                    'accessURL': None,
+                    'mimetype': '',
+                    'format': '',
+                    'accessURL': '',
                 }
 
+                # Make the guesses.
                 if distribution.mimetype:
                     guesses['mimetype'] = self.guess_type(distribution.mimetype)
                 if distribution.format:
                     guesses['format'] = self.guess_type(distribution.format)
                 if distribution.accessURL:
-                    guesses['accessURL'] = mimetypes.guess_type(distribution.accessURL)[0]
+                    guess = mimetypes.guess_type(distribution.accessURL)
+                    if guess[1] == 'gzip' and (guesses['mimetype'] and guesses['mimetype'] != guess[0] or guesses['format'] and guesses['format'] != guess[0]):
+                        guesses['accessURL'] = 'application/gzip'
+                    else:
+                        guesses['accessURL'] = guess[0] or ''
 
-                # If the distribution is in shapefile or TAB format,
-                # "application/zip" will be a valid but incorrect guess.
-                media_types = [media_type for media_type in guesses.values() if media_type and not self.ignore_type(media_type)]
-                zip_media_type = next((media_type for media_type in media_types if media_type in zip_media_types), None)
+                # Eliminate non-media types.
+                for field, media_type in guesses.items():
+                    if not media_type or self.ignore_type(media_type):
+                        guesses[field] = ''
+
+                # Eliminate empty media types.
+                media_types = list(filter(None, guesses.values()))
+
+                # Media types guessed from extensions, e.g. "application/xml",
+                # can be less specific than e.g. "application/rdf+xml".
+                specific_media_type = None
+                for ambiguous_media_type, specific_media_types in ambiguous_media_types.items():
+                    # If the media types include an ambiguous media type and a
+                    # specific media type, eliminate the ambigious media type.
+                    if ambiguous_media_type in media_types:
+                        specific_media_type = next((media_type for media_type in media_types if media_type in specific_media_types), None)
+                        if specific_media_type:
+                            media_types = [media_type for media_type in media_types if media_type != ambiguous_media_type]
+                            break
 
                 # Test if the guesses agree with each other.
-                if zip_media_type:
-                    for value in media_types:
-                        if value not in ('application/zip', zip_media_type):
-                            self.bad_guess(distribution, guesses, 'ZIP mismatch')
+                if specific_media_type:
+                    if len(set(media_types)) > 1:
+                        self.bad_guess('Multiple specific media types', guesses, distribution)
                 elif guesses['accessURL']:
+                    # @todo Do HEAD requests, as sometimes the file extension
+                    # is misleading, e.g. .xml redirects to .html in GB. Note
+                    # that even when the metadata is consistent, the media type
+                    # could be incorrect.
                     if guesses['mimetype'] and guesses['accessURL'] != guesses['mimetype']:
-                        self.bad_guess(distribution, guesses, 'accessURL mismatch')
+                        self.bad_guess('Conflict', guesses, distribution)
                     elif guesses['format'] and guesses['accessURL'] != guesses['format']:
-                        self.bad_guess(distribution, guesses, 'accessURL mismatch')
+                        self.bad_guess('Conflict', guesses, distribution)
                 elif guesses['mimetype'] and guesses['format'] and guesses['mimetype'] != guesses['format']:
-                    self.bad_guess(distribution, guesses, 'mimetype mismatch')
+                    self.bad_guess('Conflict', guesses, distribution)
 
+                # Test that we recognize the media types.
                 for media_type in media_types:
-                    if not self.valid_type(media_type):
-                        self.bad_guess(distribution, guesses, 'Unrecognized')
+                    if media_type and not self.valid_type(media_type):
+                        self.bad_guess('Unrecognized', guesses, distribution)
 
-                if len(set(media_types)) == 1:
+                # If a unique media type is recognized.
+                if self.save and len(set(media_types)) == 1:
                     distribution.mediaType = media_types[0]
                     distribution.save()
+
+            for key, (sample, count) in sorted(self.warnings.items(), key=lambda warning: warning[1][1]):
+                message, guesses = list(key)
+                guesses = dict(guesses)
+
+                print('{:4} {}'.format(count, message))
+                for field in ('mimetype', 'format', 'accessURL'):
+                    value = getattr(sample, field)
+                    if value:
+                        if field == 'accessURL' and len(value) > 120:
+                            value = '{}..{}'.format(value[:59], value[-59:])
+                        # e.g. "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                        print('  {:9} {:73} {}'.format(field, guesses[field], value))
+                print()
+
+            print('Warnings: {}/{} ({} unique)'.format(self.warnings_count, qs.count(), len(self.warnings)))
 
         if options['licenses']:
             self.info('Normalizing licenses...')
@@ -113,11 +157,8 @@ class Command(InventoryCommand):
             for license_title, license in license_titles.items():
                 qs.filter(license_title=license_title).update(license=license)
 
-        print('Warnings: {}'.format(self.warnings))
-
     def guess_type(self, value):
-        # Normalize case and spaces.
-        value = re.sub('\A\.', '', ' '.join(value.lower().split()))
+        value = re.sub('\A\.', '', ' '.join(value.lower().split()))  # Normalize case and spaces and remove period from extension.
         value = format_corrections.get(value, value)
         if not self.valid_type(value):
             value = mimetypes.types_map.get('.{}'.format(value), value)
@@ -129,16 +170,15 @@ class Command(InventoryCommand):
     def ignore_type(self, value):
         return value in ignore_media_types or ',' in value
 
-    def bad_guess(self, distribution, guesses, message):
-        self.warnings += 1
-
-        print(message)
-        for key in ('mimetype', 'format', 'accessURL'):
-            value = getattr(distribution, key)
-            if value:
-                if key == 'accessURL' and len(value) > 160:
-                    value = '{}..{}'.format(value[:79], value[-79:])
-                print('  {:9} {:36} {}'.format(key, guesses[key], value))
+    def bad_guess(self, message, guesses, sample):
+        self.save = False
+        key = (message, tuple(guesses.items()))
+        if not self.warnings.get(key):
+            self.warnings[key] = [sample, 1]
+        else:
+            value = self.warnings[key]
+            self.warnings[key] = [value[0], value[1] + 1]
+        self.warnings_count += 1
 
 
 license_ids = {
@@ -217,6 +257,10 @@ types = (
     # http://reference.wolfram.com/language/ref/format/DBF.html
     ('application/dbf', '.dbf'),
 
+    # http://www.iana.org/assignments/media-types/media-types.xhtml
+    # http://tools.ietf.org/html/rfc6713#section-3
+    ('application/gzip', '.gz'),
+
     # http://tools.ietf.org/html/draft-hallambaker-jsonl-01
     ('application/json-l', '.jsonl'),
 
@@ -232,16 +276,24 @@ types = (
     # http://www.w3.org/TR/owl2-xml-serialization/#Appendix:_Internet_Media_Type.2C_File_Extension.2C_and_Macintosh_File_Type
     ('application/owl+xml', '.owl'),
 
+    # http://www.iana.org/assignments/media-types/media-types.xhtml
+    # http://tools.ietf.org/html/rfc3870
+    ('application/rdf+xml', '.rdf'),
+
     # http://www.w3.org/TR/2013/REC-rdf-sparql-XMLres-20130321/#mime
     ('application/sparql-results+xml', '.srx'),
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     ('application/vnd.geo+json', '.geojson'),
 
-    # http://inspire.ec.europa.eu/media-types/
-    ('application/x-ascii-grid', '.grd'),
-    ('application/x-filegdb', '.gdb'),
-    ('application/x-worldfile', '.tfw'),
+    # http://www.w3.org/TR/wsdl20/#ietf-draft
+    ('application/wsdl+xml', '.wsdl'),
+
+    # http://blogs.msdn.com/b/jaimer/archive/2008/01/04/mime-types.aspx
+    ('application/x-msaccess', '.mdb'),
+
+    # http://en.wikipedia.org/wiki/Torrent_file
+    ('application/x-bittorrent', '.torrent'),
 
     # http://en.wikipedia.org/wiki/Proxy_auto-config
     ('application/x-ns-proxy-autoconfig', '.pac'),
@@ -251,11 +303,10 @@ types = (
     # http://support.sas.com/resources/papers/proceedings13/115-2013.pdf
     ('application/x-sas', '.sas'),
 
-    # http://en.wikipedia.org/wiki/MrSID
-    ('image/x-mrsid', '.sid'),
-
-    # http://reference.wolfram.com/language/ref/format/LWO.html
-    ('image/x-lwo', '.lwo'),
+    # http://inspire.ec.europa.eu/media-types/
+    ('application/x-ascii-grid', '.grd'),
+    ('application/x-filegdb', '.gdb'),
+    ('application/x-worldfile', '.tfw'),
 
     # https://github.com/qgis/QGIS/blob/master/debian/mime/application
     ('application/x-esri-crs', '.prj'),
@@ -263,27 +314,35 @@ types = (
     ('application/x-mapinfo-mif', '.mif'),
     ('application/x-qgis-project', '.qgs'),
     ('application/x-raster-ecw', '.ecw'),
+
+    # http://reference.wolfram.com/language/ref/format/LWO.html
+    ('image/x-lwo', '.lwo'),
 )
 
+ambiguous_media_types = {
+    'application/json': [
+        'application/vnd.geo+json',
+    ],
+    'application/xml': [
+        'application/atom+xml',
+        'application/gml+xml',
+        'application/rdf+xml',
+        'application/rss+xml',
+        'application/soap+xml',
+        'application/vnd.ogc.se_xml',
+        'application/vnd.ogc.wms_xml',
+        'application/wsdl+xml',
+        'application/xslt+xml',
+    ],
+    'application/zip': [
+        'application/x-shapefile',
+        'application/x-tab',
+    ],
+}
+
 # Media types without an extension or with an extension for which there is already a media type.
-valid_media_types = frozenset([
-    # http://www.iana.org/assignments/media-types/media-types.xhtml
-    # https://tools.ietf.org/html/rfc3902
-    'application/soap+xml',
+valid_media_types = frozenset([item for list in ambiguous_media_types.values() for item in list])
 
-    # http://docs.geoserver.org/stable/en/user/services/wms/reference.html
-    'application/vnd.ogc.wms_xml',
-    'application/vnd.ogc.se_xml',
-
-    # http://inspire.ec.europa.eu/media-types/
-    'application/x-shapefile',
-    'application/x-tab',
-])
-
-zip_media_types = frozenset([
-    'application/x-shapefile',
-    'application/x-tab',
-])
 
 
 format_corrections = {
@@ -305,17 +364,21 @@ format_corrections = {
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://tools.ietf.org/html/rfc7158#section-11
-    'text/javascript': 'application/json',
+    'applicaton/json': 'application/json',
     'rest json': 'application/json',
+    'text/javascript': 'application/json',
+    'text/json': 'application/json',
     # http://resources.arcgis.com/en/help/rest/apiref/formattypes.html
-    # HTML is default, but JSON is next most popular.
+    # HTML is default, but JSON and XML are available.
+    'arcgis map service': 'application/json',
     'arcgis server': 'application/json',
     'arcgis server rest': 'application/json',
+    'esri rest': 'application/json',
     # http://www.odata.org/documentation/odata-version-4-0/
     'odata webservice': 'application/json',
 
     # http://blogs.msdn.com/b/jaimer/archive/2008/01/04/mime-types.aspx
-    'access': 'application/msaccess',
+    'application/accdb': 'application/msaccess',
     'application/vnd.ms-access': 'application/msaccess',
     'msaccess': 'application/msaccess',
 
@@ -330,24 +393,34 @@ format_corrections = {
     # http://tools.ietf.org/html/rfc2046#section-4.5.1
     'application/octet-string': 'application/octet-stream',
     'application/octet_stream': 'application/octet-stream',
+    'application/x-octet-stream': 'application/octet-stream',
     'binary/octet-stream': 'application/octet-stream',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://tools.ietf.org/html/rfc6713#section-3
+    'application/x-gzip': 'application/gzip',
     'gzip': 'application/gzip',
+    'tgz': 'application/gzip',
+    'txt / gz': 'application/gzip',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://tools.ietf.org/html/rfc3778
     '0_v2 / pdf': 'application/pdf',
     'aplication/pdf': 'application/pdf',
     'geopdf': 'application/pdf',
+    'pdf / pdf': 'application/pdf',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://tools.ietf.org/html/rfc3870
     'application/xml+rdf': 'application/rdf+xml',
+    'image/rdf': 'application/rdf+xml',
+    'skos rdf': 'application/rdf+xml',
     'skos webservice': 'application/rdf+xml',
+    'text/rdf': 'application/rdf+xml',
 
     # http://www.rssboard.org/rss-mime-type-application.txt
+    'ensearch api': 'application/rss+xml',
+    'feed': 'application/rss+xml',
     'rss 1.0': 'application/rss+xml',
     'rss 2.0': 'application/rss+xml',
 
@@ -357,6 +430,7 @@ format_corrections = {
 
     # http://www.w3.org/TR/2013/REC-rdf-sparql-XMLres-20130321/#mime
     'api/sparql': 'application/sparql-results+xml',
+    'sparql': 'application/sparql-results+xml',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     'kml/google maps': 'application/vnd.google-earth.kml+xml',
@@ -382,6 +456,7 @@ format_corrections = {
 
     # http://blogs.msdn.com/b/vsofficedeveloper/archive/2008/05/08/office-2007-open-xml-mime-types.aspx
     'application/vnd.ms-excel.macroenabled.12': 'application/vnd.ms-excel.sheet.macroEnabled.12',
+    'application/xlsm': 'application/vnd.ms-excel.sheet.macroEnabled.12',
 
     # http://blogs.msdn.com/b/jaimer/archive/2008/01/04/mime-types.aspx
     'application/vnd.ms-pkistl': 'application/vnd.ms-pki.stl',
@@ -389,17 +464,33 @@ format_corrections = {
     # http://blogs.msdn.com/b/vsofficedeveloper/archive/2008/05/08/office-2007-open-xml-mime-types.aspx
     'application/x-mspowerpoint': 'application/vnd.ms-powerpoint',
 
+    # http://blogs.msdn.com/b/vsofficedeveloper/archive/2008/05/08/office-2007-open-xml-mime-types.aspx
+    'application/docm': 'application/vnd.ms-word.document.macroEnabled.12',
+
+    # http://www.iana.org/assignments/media-types/media-types.xhtml
+    'application/x-vnd.oasis.opendocument.presentation': 'application/vnd.oasis.opendocument.presentation',
+
     # http://docs.geoserver.org/stable/en/user/services/wms/reference.html
     'wms': 'application/vnd.ogc.wms_xml',
     'wms_xml': 'application/vnd.ogc.wms_xml',
 
     # http://blogs.msdn.com/b/vsofficedeveloper/archive/2008/05/08/office-2007-open-xml-mime-types.aspx
+    'application/pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    # http://blogs.msdn.com/b/vsofficedeveloper/archive/2008/05/08/office-2007-open-xml-mime-types.aspx
     'application/vnd.ms-excel.12': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'excel (.xlsx)': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'excel (xlsx)': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'openxml': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    # http://blogs.msdn.com/b/vsofficedeveloper/archive/2008/05/08/office-2007-open-xml-mime-types.aspx
+    'application/doc': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'ms word': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 
     # http://en.wikipedia.org/wiki/7z
     'lzma': 'application/x-7z-compressed',
+    'parco_veicoli_aprile_2014.7z': 'application/x-7z-compressed',
+    'parco_veicoli_gennaio_2013.7z': 'application/x-7z-compressed',
 
     # http://inspire.ec.europa.eu/media-types/
     'arcgis grid format': 'application/x-ascii-grid',
@@ -418,6 +509,9 @@ format_corrections = {
     'mif−mid': 'application/x-mapinfo-mif',
 
     # http://resources.arcgis.com/en/help/main/10.1/index.html#//018s0000000n000000
+    'access': 'application/x-msaccess',
+    'access.mdb': 'application/x-msaccess',
+    'application/mdb': 'application/x-msaccess',
     'arcgis personal geodatabase': 'application/x-msaccess',
     'personal geodatabase feature class': 'application/x-msaccess',
     'personal geodatabase': 'application/x-msaccess',
@@ -434,10 +528,8 @@ format_corrections = {
     'fgdb / gdb': 'application/x-filegdb',
     'file geo-database (.gdb)': 'application/x-filegdb',
     'file geodatabase': 'application/x-filegdb',
-    'ftp site with zipped esri file geodabases': 'application/x-filegdb',
     'gdb (esri)': 'application/x-filegdb',
     'geodatabase': 'application/x-filegdb',
-    'zipped esri file geodatabase': 'application/x-filegdb',
 
     # http://en.wikipedia.org/wiki/RAR
     'application/rar': 'application/x-rar-compressed',
@@ -447,6 +539,7 @@ format_corrections = {
     'arcgis shapefile': 'application/x-shapefile',
     'esri shape file': 'application/x-shapefile',
     'esri shapefile': 'application/x-shapefile',
+    'qgis': 'application/x-shapefile',
     'shape file': 'application/x-shapefile',
     'shape': 'application/x-shapefile',
     'shapefile': 'application/x-shapefile',
@@ -495,6 +588,10 @@ format_corrections = {
     'csv (inside zip)': 'application/zip',
     'csv (zip)': 'application/zip',
     'csv / zip': 'application/zip',
+    'csv file': 'application/zip',
+    'csv.zip': 'application/zip',
+    'ftp site with zipped esri file geodabases': 'application/zip',
+    'uso_suolo_dusaf4_2012_polygon.zip': 'application/zip',
     'zip (csv utf8)': 'application/zip',
     'zip (csv)': 'application/zip',
     'zip (gpx)': 'application/zip',
@@ -522,12 +619,26 @@ format_corrections = {
     'zip:mdb': 'application/zip',
     'zip:xml en csv': 'application/zip',
     'zip:xml': 'application/zip',
+    'zipped esri file geodatabase': 'application/zip',
     # http://www.geobase.ca/geobase/en/data/cded/description.html
     'cdec ascii': 'application/zip',
     # https://developers.google.com/transit/gtfs/reference
     'gtfs': 'application/zip',
 
+    # http://reference.wolfram.com/language/ref/format/BMP.html
+    'application/bmp': 'image/bmp',
+
     # http://www.iana.org/assignments/media-types/media-types.xhtml
+    # http://tools.ietf.org/html/rfc2046#section-4.2
+    'application/jpg': 'image/jpeg',
+    'image/jpg': 'image/jpeg',
+    'jpeg (cc48)': 'image/jpeg',
+
+    # http://www.iana.org/assignments/media-types/media-types.xhtml
+    'jpeg 2000': 'image/jp2',
+
+    # http://www.iana.org/assignments/media-types/media-types.xhtml
+    'application/tif': 'image/tiff',
     'image/tif': 'image/tiff',
     'multi-page tiff': 'image/tiff',
     'single-page tiff': 'image/tiff',
@@ -537,16 +648,9 @@ format_corrections = {
     'geotif': 'image/tiff',
     'geotiff': 'image/tiff',
 
-    # http://www.iana.org/assignments/media-types/media-types.xhtml
-    # http://tools.ietf.org/html/rfc2046#section-4.2
-    'image/jpg': 'image/jpeg',
-    'jpeg (cc48)': 'image/jpeg',
-
-    # http://www.iana.org/assignments/media-types/media-types.xhtml
-    'jpeg 2000': 'image/jp2',
-
-    # http://en.wikipedia.org/wiki/MrSID (not https://github.com/qgis/QGIS/blob/master/debian/mime/application)
-    'mrsid': 'image/x-mrsid',
+    # http://en.wikipedia.org/wiki/MrSID
+    'image/x-mrsid-image': 'image/x-mrsid-image',
+    'mrsid': 'image/x-mrsid-image',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://tools.ietf.org/html/rfc5545#section-8.1
@@ -569,17 +673,28 @@ format_corrections = {
     'link_csv': 'text/csv',
     'text (csv)': 'text/csv',
     'text(csv)': 'text/csv',
+    'text/comma-separated-values': 'text/csv',
     'text/cvs': 'text/csv',
+    'text/x-comma-separated-values': 'text/csv',
     'text;csv': 'text/csv',
+    'txt/cvs': 'text/csv',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
+    'application/htm': 'text/html',
+    'application/html': 'text/html',
+    'arcgis map preview': 'text/html',
+    'arcgis online map': 'text/html',
+    'hmtl': 'text/html',
     'home page': 'text/html',
+    'html+rdfa': 'text/html',
     'html5': 'text/html',
     'link': 'text/html',
     'link_html': 'text/html',
     'map portal': 'text/html',
     'portal': 'text/html',
+    'query tool': 'text/html',
     'search, view & download data': 'text/html',
+    'sparql web form': 'text/html',
     'texl/html': 'text/html',
     'text/htm': 'text/html',
     'web': 'text/html',
@@ -598,7 +713,14 @@ format_corrections = {
     'dat': 'text/plain',
     'fixed-length ascii text': 'text/plain',
     'plain': 'text/plain',
+    'text/txt': 'text/plain',
     'texte': 'text/plain',
+
+    # http://www.iana.org/assignments/media-types/media-types.xhtml
+    'application/rtf': 'text/rtf',
+
+    # http://www.iana.org/assignments/media-types/media-types.xhtml
+    'text/tab': 'text/tab-separated-values',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://www.w3.org/TeamSubmission/turtle/#sec-mime
@@ -611,29 +733,85 @@ format_corrections = {
 
 # Media types that are as good as nil.
 ignore_media_types = frozenset([
-    'altro',
+    '""',
+    'all',
+    'api',
+    'application/octet-stream',
+    'application/unknown',
+    'application/x-unknown-content-type',
     'cd-rom',
+    'data file',
     'geospatial',
+    'image',
+    'img',
+    'map',
     'meta/void',
     'n/a',
-    'application/octet-stream',
+    'no-type',
+    'rest',
+    'service',
+    'tool',
+    'unknown/unknown',
+    'upon request',
+    'url',
+    'variable',
+    'varies',
+    'varies upon user output',
+    'various',
     'various formats',
+    'viewservice',
+    'webservice',
+    'widget',
     'wmf & wfs',
     'wms & wfs',
 
+    # Download
+    'application/force-download',
+    'application/save',
+    'application/x-download',
+    'force-download',
+
+    # Error
+    '15 kb',
+
+    # Multiple (semi-colon)
+    'csv/txt; pdf',
+    'csv/txt; sgml; xml',
+    'csv/txt; sgml; xml',
+    'csv/txt; xml; tiff',
+    'sgml; xml; tiff',
+    'web service (xml); web service (ansi z39.50), images, documents',
+    'xml; tiff',
+    'xml; tiff',
+    # Multiple (slash)
+    'pdf/webpages',
+    'xml/tiff/jpeg',
+    'xml/tiff/jpg',
+    # Multiple (conjunction)
+    'api: xml en jpeg',
+    'xls en csv',
+
+    # Other
+    'altro', # IT
+    'autre', # FR
+    'other', # EN
+
+    # Programming language
+    'ashx',  # ASP.NET
+    'asp',  # Active Server Pages
+    'aspx',  # ASP.NET
+    'axd',  # ASP.NET
+    'do',  # Java Struts
+    'jsp',  # JavaServer Pages
+    'php',  # PHP
+    'shtml',  # Server Side Includes
+
+    # Software
+    'mobile application',
+    'cross-platform java-based desktop software',
+
     # No standard media type
+    # @see http://en.wikipedia.org/wiki/Shapefile
     'sbn',
     'sbx',
-
-    # API with unknown format
-    'api',
-    'rest',
-    'service',
-
-    # Programming language extension
-    'asp',
-    'aspx',
-    'do',
-    'php',
-    'shtml',
 ])
