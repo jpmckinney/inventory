@@ -114,7 +114,7 @@ class Command(InventoryCommand):
                 message, guesses = list(key)
                 guesses = dict(guesses)
 
-                print('{:4} {}'.format(count, message))
+                print('{:5} {}'.format(count, message))
                 for field in ('mimetype', 'format', 'accessURL'):
                     value = getattr(sample, field)
                     if value:
