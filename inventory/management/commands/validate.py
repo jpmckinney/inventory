@@ -31,9 +31,12 @@ class Command(InventoryCommand):
     help = 'Validate files formats'
 
     option_list = InventoryCommand.option_list + (
-        make_option('--nb-records', action='store', dest='nb_records',
+        make_option('--nb-distribution', action='store', dest='nb_distribution',
                     default=0,
-                    help='Specifies the number of records to validate.'),
+                    help='Specifies the number of distributions (e.g files) to validate in this batch.'),
+        make_option('--nb-lines', action='store', dest='nb_lines',
+                    default=0,
+                    help='For each CSV files, limit the maximum number of lines to evaluate (e.g runs faster.'),
     )
 
     def handle(self, *args, **options):
@@ -45,12 +48,11 @@ class Command(InventoryCommand):
         logger.addHandler(handler)        
 
         self.ruby_path = os.getcwd() + '/inventory/validators/csv/validate_csv.rb'
-        print(self.ruby_path) 
 
         qs = Distribution.objects.filter(format='CSV').filter(valid__isnull=True)
 
-        if options["nb_records"] != 0:
-            qs = qs[0:int(options["nb_records"])]
+        if options["nb_distribution"] != 0:
+            qs = qs[0:int(options["nb_distribution"])]
 
         for distribution in qs:
 
@@ -58,24 +60,30 @@ class Command(InventoryCommand):
 
             logger.info('Validating %s' % url)
 
-            (result, data) = self.csv_validator(url)
+            (result, data) = self.csv_validator(url, options["nb_lines"])
 
             if result == True:
                 distribution.valid = data["valid"]
                 distribution.validation_errors = data["errors"]
                 distribution.validation_content_type = data["content_type"]
                 distribution.validation_encoding = data["encoding"]
-                distribution.validation_headers = data["headers"]
+                distribution.validation_headers = json.dumps(data["headers"])
                 distribution.save()
 
             else:
                 logger.error('Error: %s' % data)
 
 
-    def csv_validator(self,url):
+    def csv_validator(self,url, nb_lines):
         
         #TODO - Relative path does not work... will have to find a better way than full path
-        response = muterun_rb(self.ruby_path, '"' + url + '"')
+        command_line = '"' + url + '"'
+
+
+        if nb_lines != 0:
+            command_line += ' ' + nb_lines
+
+        response = muterun_rb(self.ruby_path, command_line)
 
 
         if response.exitcode == 0:
