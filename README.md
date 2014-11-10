@@ -4,6 +4,7 @@ Scripts used by the [Open Government Partnership](http://www.opengovpartnership.
 
 ## Usage
 
+    bundle
     mkvirtualenv inventory
     pip install -r requirements.txt
     createdb inventory

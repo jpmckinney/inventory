@@ -47,6 +47,9 @@ class Dataset(models.Model):  # dcat:Dataset
     class Meta:
         unique_together = (('country_code', 'name'),)
 
+    def __str__(self):
+        return '{}: {}'.format(self.country_code, self.name)
+
 
 class Distribution(models.Model):  # dcat:Distribution
     # Identification and common fields
@@ -68,15 +71,19 @@ class Distribution(models.Model):  # dcat:Distribution
     mimetype = models.TextField(default='')
     mimetype_inner = models.TextField(default='')
     format = models.TextField(default='')  # dct
+
+    # Clean properties
+    mediaType = models.TextField(default='', db_index=True)  # dcat
+
+    # CSV validation
     validation_errors = models.TextField(null=True)
     validation_encoding = models.TextField(null=True)
     validation_headers = models.TextField(null=True)
     validation_content_type = models.TextField(null=True)
     valid = models.NullBooleanField(null=True)
 
-
-    # Clean properties
-    mediaType = models.TextField(default='', db_index=True)  # dcat
-
     class Meta:
         unique_together = (('dataset', '_id'),)
+
+    def __str__(self):
+        return '{}: {} {}'.format(self.country_code, self.dataset, self._id)
