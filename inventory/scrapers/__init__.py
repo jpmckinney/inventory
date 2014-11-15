@@ -1,5 +1,7 @@
 from .base import Catalog
 from .ckan import CKAN
+from .open_colibri import OpenColibri
+from .junar import Junar
 from .socrata import Socrata
 
 catalogs = [
@@ -7,7 +9,10 @@ catalogs = [
     Catalog('au', 'http://data.gov.au/', scraper=CKAN),
     Catalog('br', 'http://dados.gov.br/', scraper=CKAN),
     Catalog('ca', 'http://data.gc.ca/data/en/', scraper=CKAN),
+    Catalog('cl', 'http://api.recursos.datos.gob.cl/', scraper=Junar, parameters={'auth_key': '6ae305b9ad9923f768879e851addf143c3461182'}),
+    Catalog('cr', 'http://gobiernodigitalcr.cloudapi.junar.com/', scraper=Junar, parameters={'auth_key': 'a99bb53e81c5fcaec72fd313fcb97c7306e13d3d'}),
     Catalog('gb', 'http://data.gov.uk/', scraper=CKAN, parameters={'fq': 'license_id-is-ogl:true'}),
+    Catalog('gr', 'http://data.gov.gr/', scraper=OpenColibri),
     Catalog('id', 'http://data.id/', scraper=CKAN),
     Catalog('ie', 'http://data.gov.ie/', scraper=CKAN),
     Catalog('it', 'http://www.dati.gov.it/catalog/', scraper=CKAN),
@@ -29,8 +34,6 @@ catalogs = [
     # Catalog('kr', 'https://www.data.go.kr/'),  # 9268 API
     # Catalog('es', 'http://datos.gob.es/'),  # 2572 Drupal http://datos.gob.es/sites/default/files/catalogo.rdf
     # Catalog('nz', 'http://data.govt.nz/'),  # 2559 SilverStripe RSS
-    # Catalog('cl', 'http://datos.gob.cl/', scraper=Junar),  # 1176
-    # Catalog('cr', 'http://datosabiertos.gob.go.cr/', scraper=Junar),  # 250
     # Catalog('gh', 'http://data.gov.gh/'),  # 1068 OGPL http://data.gov.gh/dataset-rss.xml
 
     # Over 100:
@@ -46,7 +49,6 @@ catalogs = [
     # Under 100:
     # Catalog('jo', 'http://www.jordan.gov.jo/wps/portal/OpenData_en'),  # <100
     # Catalog('fi', 'http://data.suomi.fi/'),  # <50
-    # Catalog('gr', 'http://data.gov.gr/', scraper=OpenColibri),  # 14
     # Catalog('ge', 'http://data.gov.ge/'),  # 14
     # Catalog('mt', 'http://data.gov.mt/'),  # 4
 ]

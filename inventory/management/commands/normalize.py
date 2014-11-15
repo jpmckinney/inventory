@@ -184,18 +184,23 @@ class Command(InventoryCommand):
 license_ids = {
     # Against DRM
     'against-drm': 'http://www.freecreations.org/Against_DRM2.html',
+
     # Creative Commons
-    'cc-by-4':                                 'http://creativecommons.org/licenses/by/4.0/',
-    'cc-zero':                                 'http://creativecommons.org/publicdomain/zero/1.0/',
-    'cc0':                                     'http://creativecommons.org/publicdomain/zero/1.0/',
-    'creative-commons-attribution-cc-by-':     'http://creativecommons.org/licenses/by/3.0/nl/',
-    'naamsvermelding---gelijkdelen-cc-by-sa-': 'http://creativecommons.org/licenses/by-sa/3.0/nl/',
+    'cc-by-4':                                     'http://creativecommons.org/licenses/by/4.0/',
+    'cc-zero':                                     'http://creativecommons.org/publicdomain/zero/1.0/',
+    'cc0':                                         'http://creativecommons.org/publicdomain/zero/1.0/',
+    'OKD Compliant::Creative Commons CCZero':      'http://creativecommons.org/publicdomain/zero/1.0/',
+    'creative-commons-attribution-cc-by-':         'http://creativecommons.org/licenses/by/3.0/nl/',
+    'naamsvermelding---gelijkdelen-cc-by-sa-':     'http://creativecommons.org/licenses/by-sa/3.0/nl/',
     'Creative Commons 1.0 Universal (http://creativecommons.org/publicdomain/zero/1.0/legalcode)': 'http://creativecommons.org/publicdomain/zero/1.0/',
+    # GR http://data.gov.gr/terms/
+    'OKD Compliant::Creative Commons Attribution': 'http://creativecommons.org/licenses/by/3.0/gr/',
     # NL https://data.overheid.nl/data/
-    'publiek-domein':                          'http://creativecommons.org/publicdomain/mark/1.0/',
+    'publiek-domein':                              'http://creativecommons.org/publicdomain/mark/1.0/',
     # PH confirmed via email
-    'Attribution (CC-BY)':                     'http://creativecommons.org/licenses/by/3.0/ph/',
-    'Attribution-Share Alike (BY-SA)':         'http://creativecommons.org/licenses/by-sa/',
+    'Attribution (CC-BY)':                         'http://creativecommons.org/licenses/by/3.0/ph/',
+    'Attribution-Share Alike (BY-SA)':             'http://creativecommons.org/licenses/by-sa/',
+
     # Open Data Commons
     'odc-by':   'http://opendatacommons.org/licenses/by/1.0/',
     'odc-odbl': 'http://opendatacommons.org/licenses/odbl/1.0/',
@@ -215,8 +220,7 @@ license_ids = {
     # IT
     'iodl1': 'http://www.formez.it/iodl/',
     'iodl2': 'http://www.dati.gov.it/iodl/2.0/',
-    # UY
-    # https://catalogodatos.gub.uy/
+    # UY https://catalogodatos.gub.uy/
     'odc-uy': 'http://datos.gub.uy/wps/wcm/connect/856cc1804db0463baa8bea01b72d8394/terminos-catalogodatos.pdf?MOD=AJPERES&ContentCache=NONE&CACHEID=856cc1804db0463baa8bea01b72d8394',
 
     # Generic
