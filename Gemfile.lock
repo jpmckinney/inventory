@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/jpmckinney/csvlint.rb.git
-  revision: 9dd4cbc1bddbc6aed35d0474fd3e29a5d158bdcc
-  branch: speed
+  revision: 73710bc90f217333a69b2c7777250fefc3385e09
+  branch: speed_format
   specs:
     csvlint (0.0.1)
       activesupport
@@ -24,7 +24,7 @@ GEM
     i18n (0.6.11)
     json (1.8.1)
     mime-types (2.4.3)
-    minitest (5.4.2)
+    minitest (5.4.3)
     open_uri_redirections (0.1.4)
     thread_safe (0.3.4)
     tzinfo (1.2.2)
