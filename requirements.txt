@@ -8,6 +8,8 @@ psycopg2==2.5.4
 # Scraper
 -e git://github.com/ckan/ckanapi.git#egg=ckanapi
 logutils==0.3.3
+lxml==3.3.5
+rdflib==4.1.2
 requests==2.4.0
 requests-cache==0.4.5
 
