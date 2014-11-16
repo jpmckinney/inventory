@@ -302,10 +302,20 @@ types = (
     # http://en.wikipedia.org/wiki/Proxy_auto-config
     ('application/x-ns-proxy-autoconfig', '.pac'),
 
+    # http://fileformats.archiveteam.org/wiki/SAV
     ('application/x-spss-sav', '.sav'),
 
     # http://support.sas.com/resources/papers/proceedings13/115-2013.pdf
+    # http://help.dottoro.com/lapuadlp.php
     ('application/x-sas', '.sas'),
+
+    # http://www.sgmjournals.org/site/misc/suppfiletypes.xhtml
+    # http://help.dottoro.com/lapuadlp.php
+    ('application/x-stata', '.dta'),
+
+    # http://www-01.ibm.com/support/knowledgecenter/SSLTBW_1.12.0/com.ibm.zos.r12.dgwa400/imwziu181183.htm
+    # http://help.dottoro.com/lapuadlp.php
+    ('application/x-troff-man', '.man'),
 
     # http://inspire.ec.europa.eu/media-types/
     ('application/x-ascii-grid', '.grd'),
@@ -319,8 +329,30 @@ types = (
     ('application/x-qgis-project', '.qgs'),
     ('application/x-raster-ecw', '.ecw'),
 
+    # http://www.zamzar.com/convert/cdr-to-eps/
+    ('image/x-cdr', '.cdr'),
+
     # http://reference.wolfram.com/language/ref/format/LWO.html
     ('image/x-lwo', '.lwo'),
+
+
+
+    # No media type found, so minting:
+    # http://www.gdal.org/drv_s57.html
+    ('application/x-s57', '.000'),
+    # http://mcmcweb.er.usgs.gov/sdts/
+    ('application/x-sdts', '.ddt'),
+    # http://webhelp.esri.com/arcgisdesktop/9.3/index.cfm?TopicName=gridfloat
+    ('application/x-gridfloat', '.flt'),
+    # http://en.wikipedia.org/wiki/GRIB
+    ('application/x-greb', '.grb'),
+    # http://webhelp.esri.com/arcgisexplorer/900/en/add_arcgis_layers.htm
+    ('application/x-lyr', '.lpk'),
+    ('application/x-lyr', '.lyr'),
+    # http://wiki.openstreetmap.org/wiki/PBF_Format
+    ('application/x-pbf', '.pbf'),
+    # http://en.wikipedia.org/wiki/SEG_Y
+    ('application/x-segy', '.sgy'),
 )
 
 ambiguous_media_types = {
@@ -539,6 +571,8 @@ format_corrections = {
     'application/rar': 'application/x-rar-compressed',
     'rar+sas': 'application/x-rar-compressed',
 
+    'segy': 'application/x-segy',
+
     # http://inspire.ec.europa.eu/media-types/
     'arcgis shapefile': 'application/x-shapefile',
     'esri shape file': 'application/x-shapefile',
@@ -558,6 +592,9 @@ format_corrections = {
     'winzipped shapefile': 'application/x-shapefile',
     'zip (shp)': 'application/x-shapefile',
     'zip:shape': 'application/x-shapefile',
+
+    # http://fileformats.archiveteam.org/wiki/SAV
+    'application/x-spss': 'application/x-spss-sav',
 
     # http://inspire.ec.europa.eu/media-types/
     'tab': 'application/x-tab',
@@ -641,6 +678,10 @@ format_corrections = {
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     'jpeg 2000': 'image/jp2',
 
+    # http://en.wikipedia.org/wiki/MrSID
+    'image/x-mrsid-image': 'image/x-mrsid-image',
+    'mrsid': 'image/x-mrsid-image',
+
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     'application/tif': 'image/tiff',
     'image/tif': 'image/tiff',
@@ -651,10 +692,6 @@ format_corrections = {
     'image/geotiff': 'image/tiff',
     'geotif': 'image/tiff',
     'geotiff': 'image/tiff',
-
-    # http://en.wikipedia.org/wiki/MrSID
-    'image/x-mrsid-image': 'image/x-mrsid-image',
-    'mrsid': 'image/x-mrsid-image',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://tools.ietf.org/html/rfc5545#section-8.1
@@ -688,6 +725,7 @@ format_corrections = {
     'application/html': 'text/html',
     'arcgis map preview': 'text/html',
     'arcgis online map': 'text/html',
+    'app': 'text/html',
     'hmtl': 'text/html',
     'home page': 'text/html',
     'html+rdfa': 'text/html',
@@ -746,6 +784,7 @@ ignore_media_types = frozenset([
     'cd-rom',
     'data file',
     'geospatial',
+    'edi',  # http://en.wikipedia.org/wiki/Electronic_data_interchange
     'image',
     'img',
     'map',
