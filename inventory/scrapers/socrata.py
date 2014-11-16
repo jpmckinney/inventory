@@ -12,14 +12,12 @@ gb_open_license_re = re.compile(r'open government licen[sc]e', re.IGNORECASE)
 
 class Socrata(Scraper):
     def get_packages(self):
-        # Get all the packages.
         try:
             packages = requests.get(self.catalog.url + 'data.json').json()
         except requests.packages.urllib3.exceptions.ProtocolError:
             self.error('ProtocolError %s' % self.catalog.url)
             return
 
-        # Report the total number of packages.
         self.info('%d packages %s' % (len(packages), self.catalog.url))
 
         for package in packages:

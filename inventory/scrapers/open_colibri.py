@@ -8,14 +8,12 @@ class OpenColibri(Scraper):
     # object instead of as a string, adds "maintainingGroup", properly expands
     # "categories", but lacks "resources".
     def get_packages(self):
-        # Get all the packages.
         try:
             packages = requests.get(self.catalog.url + 'api/public/v1/datasetsapi/?format=json&limit=1000').json()['objects']
         except requests.packages.urllib3.exceptions.ProtocolError:
             self.error('ProtocolError %s' % self.catalog.url)
             return
 
-        # Report the total number of packages.
         self.info('%d packages %s' % (len(packages), self.catalog.url))
 
         for package in packages:
