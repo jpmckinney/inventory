@@ -187,7 +187,10 @@ license_ids = {
 
     # Creative Commons
     'cc-by-4':                                     'http://creativecommons.org/licenses/by/4.0/',
+    'cc-by-4.0':                                   'http://creativecommons.org/licenses/by/4.0/',
+    'cc-by-sa-1-fi':                               'http://creativecommons.org/licenses/by-sa/1.0/fi/',
     'cc-zero':                                     'http://creativecommons.org/publicdomain/zero/1.0/',
+    'cc-zero-1.0':                                 'http://creativecommons.org/publicdomain/zero/1.0/',
     'cc0':                                         'http://creativecommons.org/publicdomain/zero/1.0/',
     'OKD Compliant::Creative Commons CCZero':      'http://creativecommons.org/publicdomain/zero/1.0/',
     'creative-commons-attribution-cc-by-':         'http://creativecommons.org/licenses/by/3.0/nl/',
@@ -220,6 +223,12 @@ license_ids = {
     # IT
     'iodl1': 'http://www.formez.it/iodl/',
     'iodl2': 'http://www.dati.gov.it/iodl/2.0/',
+    # FI
+    'helsinkikanava-opendata-tos': 'http://open.helsinkikanava.fi/tos.html',
+    'hri-tietoaineistot-lisenssi-nimea': 'http://www.hri.fi/lisenssit/hri-nimea/',
+    'http://teto.tampere.fi/lisenssit/tre_avoimen_datan_lisenssi.pdf': 'http://teto.tampere.fi/lisenssit/tre_avoimen_datan_lisenssi.pdf',
+    'ilmoitettumuualla': 'http://www.hri.fi/lisenssit',
+    'kmo-aluejakorajat': 'http://www.hri.fi/lisenssit/kmo-aluejakorajat/',
     # UY https://catalogodatos.gub.uy/
     'odc-uy': 'http://datos.gub.uy/wps/wcm/connect/856cc1804db0463baa8bea01b72d8394/terminos-catalogodatos.pdf?MOD=AJPERES&ContentCache=NONE&CACHEID=856cc1804db0463baa8bea01b72d8394',
 
