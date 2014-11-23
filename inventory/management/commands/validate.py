@@ -68,6 +68,7 @@ class Command(InventoryCommand):
                 distribution.validation_content_type = data["content_type"]
                 distribution.validation_encoding = data["encoding"]
                 distribution.validation_headers = json.dumps(data["headers"])
+                distribution.validation_extension = data["extension"]
                 distribution.save()
 
             else:

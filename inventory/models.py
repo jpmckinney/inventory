@@ -80,6 +80,7 @@ class Distribution(models.Model):  # dcat:Distribution
     validation_encoding = models.TextField(null=True)
     validation_headers = models.TextField(null=True)
     validation_content_type = models.TextField(null=True)
+    validation_extension = models.TextField(null=True)
     valid = models.NullBooleanField(null=True)
 
     class Meta:
