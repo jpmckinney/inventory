@@ -49,7 +49,7 @@ class Command(InventoryCommand):
 
         self.ruby_path = os.getcwd() + '/inventory/validators/csv/validate_csv.rb'
 
-        qs = Distribution.objects.filter(format='CSV').filter(valid__isnull=True)
+        qs = Distribution.objects.filter(mediaType='text/csv').filter(valid__isnull=True)
 
         if options["nb_distribution"] != 0:
             qs = qs[0:int(options["nb_distribution"])]

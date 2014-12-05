@@ -34,7 +34,12 @@ if errors.any?
   }
 else   
   output = {
-    'valid' => true,
+    'valid' => true,  
+    'encoding'     => validator.encoding,
+    'content_type' => validator.content_type,
+    'extension'    => validator.extension,
+    'headers'      => validator.headers,
+    'errors'       => ''      
   }
 end
 

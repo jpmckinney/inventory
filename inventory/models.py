@@ -5,7 +5,7 @@ from jsonfield import JSONField
 
 class Dataset(models.Model):  # dcat:Dataset
     # Identification and common fields
-    country_code = models.CharField(max_length=2, db_index=True)
+    country_code = models.CharField(max_length=3, db_index=True)
     name = models.CharField(max_length=100)  # @see https://github.com/ckan/ckan/blob/master/ckan/model/package.py#L27
     json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
@@ -59,7 +59,7 @@ class Distribution(models.Model):  # dcat:Distribution
     custom_properties = ArrayField(dbtype='text')
 
     # Additional fields
-    country_code = models.CharField(max_length=2, db_index=True)
+    country_code = models.CharField(max_length=3, db_index=True)
 
     # @see http://www.w3.org/TR/vocab-dcat/
     title = models.TextField(default='')  # dct
