@@ -20,8 +20,11 @@ class Dataset(models.Model):  # dcat:Dataset
     description = models.TextField(default='')  # dct
     issued = models.DateTimeField(null=True)  # dct
     modified = models.DateTimeField(null=True)  # dct
+    language = models.TextField(default='')  # dct
     publisher = models.TextField(default='')  # dct
+    accrualPeriodicity = models.TextField(default='')  # dct
     identifier = models.TextField(default='')  # dct (not always a UUID)
+    spatial = models.TextField(default='')  # dct
     theme = ArrayField(dbtype='text')  # dcat
     keyword = ArrayField(dbtype='text')  # dcat
     contactPoint = models.TextField(default='')  # dcat
@@ -66,6 +69,7 @@ class Distribution(models.Model):  # dcat:Distribution
     description = models.TextField(default='')  # dct
     issued = models.DateTimeField(null=True)  # dct
     modified = models.DateTimeField(null=True)  # dct
+    license = models.URLField(default='', db_index=True)  # dct
     accessURL = models.URLField(default='', max_length=2000)  # dcat (length 1692 observed)
     byteSize = models.BigIntegerField(null=True)  # dcat
     mimetype = models.TextField(default='')

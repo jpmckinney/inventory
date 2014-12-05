@@ -171,27 +171,30 @@ class CKAN(Scraper):
         # Set the license_url and license_title from extras if not yet set. The
         # license_url and license_title should agree with the extra licence_url
         # and licence_url_title.
-        if extras.get('licence_url'):
+        license_url = extras.get('licence_url') or extras.get('license_url')
+        if license_url:
             if package.get('license_url'):
-                if extras.get('licence_url') != package.get('license_url') and not (
+                if license_url != package['license_url'] and not (
                     # @note AU's "licence_url" uses a different, valid URL for "cc-by".
                     self.catalog.country_code == 'au' and
-                    extras.get('licence_url') == 'http://www.opendefinition.org/licenses/cc-by' and
-                    package.get('license_url') == 'http://creativecommons.org/licenses/by/3.0/au/'
+                    license_url == 'http://www.opendefinition.org/licenses/cc-by' and
+                    package['license_url'] == 'http://creativecommons.org/licenses/by/3.0/au/'
                 ):
-                    self.warning('extras.licence_url expected %s got %s' % (package.get('license_url'), extras.get('licence_url')))
+                    self.warning('extras.licence_url expected %s got %s' % (package['license_url'], license_url))
             elif license_id:  # only runs if license_url not previously set
-                dataset.license_url = extras.get('licence_url')
+                dataset.license_url = license_url
             else:
                 self.warning('extras.licence_url but no license_id %s' % source_url)
+                dataset.license_id = license_url
         if extras.get('licence_url_title'):
             if package.get('license_title'):
-                if extras.get('licence_url_title') != package.get('license_title'):
-                    self.warning('extras.licence_url_title expected %s got %s' % (package.get('license_title'), extras.get('licence_url_title')))
+                if extras['licence_url_title'] != package['license_title']:
+                    self.warning('extras.licence_url_title expected %s got %s' % (package['license_title'], extras['licence_url_title']))
             elif license_id:  # only runs if license_title not previously set
-                dataset.license_title = extras.get('licence_url_title')
+                dataset.license_title = extras['licence_url_title']
             else:
                 self.warning('extras.licence_url_title but no license_id %s' % source_url)
+                dataset.license_id = extras['licence_url_title']
 
         try:
             dataset.save()
