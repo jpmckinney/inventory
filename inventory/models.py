@@ -80,7 +80,7 @@ class Distribution(models.Model):  # dcat:Distribution
     mediaType = models.TextField(default='', db_index=True)  # dcat
 
     # CSV validation
-    validation_errors = models.TextField(null=True)
+    validation_errors = ArrayField(dbtype='text')
     validation_encoding = models.TextField(null=True)
     validation_headers = models.TextField(null=True)
     validation_content_type = models.TextField(null=True)
