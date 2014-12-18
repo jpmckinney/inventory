@@ -73,31 +73,37 @@ class Command(InventoryCommand):
 
         url = quote(distribution.accessURL, safe="%/:=&?~#+!$,;'@()*[]")
 
-        r = requests.get(url, stream=True)
-
-        if 'content-length'  in r.headers and int(r.headers['content-length']) > 1000000000:
-            logger.info('File  %s is too large (%s), skipping it' % (url, r.headers['content-length']))
-            distribution.validation_headers = r.headers
-            distribution.valid = False
-            distribution.validation_errors = ["TooLarge"]
-            distribution.save()
-        else:
-
-            logger.info('Validating %s' % url)
-
-            (result, data) = self.csv_validator(url, self.options["nb_lines"])
-
-            if result == True:
-                distribution.valid = data["valid"]
-                distribution.validation_errors = data["errors"]
-                distribution.validation_content_type = data["content_type"]
-                distribution.validation_encoding = data["encoding"]
-                distribution.validation_headers = json.dumps(data["headers"])
-                distribution.validation_extension = data["extension"]
+        try:
+            r = requests.get(url, stream=True)
+            if r is not None and 'content-length'  in r.headers and int(r.headers['content-length']) > 1000000000:
+                logger.info('File  %s is too large (%s), skipping it' % (url, r.headers['content-length']))
+                distribution.validation_headers = r.headers
+                distribution.valid = False
+                distribution.validation_errors = ["too_large"]
                 distribution.save()
-
             else:
-                logger.error('Error: %s' % data)
+
+                logger.info('Validating %s' % url)
+
+                (result, data) = self.csv_validator(url, self.options["nb_lines"])
+
+                if result == True:
+                    distribution.valid = data["valid"]
+                    distribution.validation_errors = data["errors"]
+                    distribution.validation_content_type = data["content_type"]
+                    distribution.validation_encoding = data["encoding"]
+                    distribution.validation_headers = json.dumps(data["headers"])
+                    distribution.validation_extension = data["extension"]
+                    distribution.save()
+
+                else:
+                    logger.error('Error: %s' % data)            
+        except :
+           distribution.validation_headers = ''
+           distribution.valid = False
+           distribution.validation_errors = ["not_found"]
+           distribution.save()
+
 
 
     def csv_validator(self,url, nb_lines):
