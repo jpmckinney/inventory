@@ -7,14 +7,14 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('inventory', '0008_distribution_validation_content_type'),
+        ('inventory', '0010_distribution_validation_extension'),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='distribution',
-            name='validation_extension',
-            field=models.TextField(null=True),
+        migrations.AlterField(
+            model_name='dataset',
+            name='name',
+            field=models.CharField(max_length=500),
             preserve_default=True,
         ),
     ]

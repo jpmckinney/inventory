@@ -6,7 +6,7 @@ from jsonfield import JSONField
 class Dataset(models.Model):  # dcat:Dataset
     # Identification and common fields
     country_code = models.CharField(max_length=2, db_index=True)
-    name = models.CharField(max_length=100)  # @see https://github.com/ckan/ckan/blob/master/ckan/model/package.py#L27
+    name = models.CharField(max_length=500)  # @see https://github.com/ckan/ckan/blob/525fd7d4c6d9987504d2d20c383b83382cefcab3/ckan/model/package.py#L29
     json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
 
@@ -79,7 +79,7 @@ class Distribution(models.Model):  # dcat:Distribution
     # Clean properties
     mediaType = models.TextField(default='', db_index=True)  # dcat
 
-    # CSV validation
+    # CSV validation # @todo Code review
     validation_errors = models.TextField(null=True)
     validation_encoding = models.TextField(null=True)
     validation_headers = models.TextField(null=True)
