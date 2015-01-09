@@ -6,7 +6,7 @@ jsonfield==0.9.23  # 1.0.0 uses text column type
 psycopg2==2.5.4
 
 # Scraper
--e git://github.com/ckan/ckanapi.git#egg=ckanapi
+-e git://github.com/jpmckinney/ckanapi.git@requests#egg=ckanapi
 logutils==0.3.3
 lxml==3.3.5
 rdflib==4.1.2
