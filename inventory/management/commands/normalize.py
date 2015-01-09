@@ -147,7 +147,7 @@ class Command(InventoryCommand):
             qs.filter(country_code='it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
 
             # UK and RO use the same license ID for different licenses.
-            qs.filter(country_code='gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/')
+            qs.filter(country_code='gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/')
             qs.filter(country_code='ro', license_id='uk-ogl').update(license='http://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf')
 
             for license_id, license in license_ids.items():
@@ -213,6 +213,7 @@ license_ids = {
     'ca-ogl-lgo': 'http://data.gc.ca/eng/open-government-licence-canada',
     'ca-odla-aldg': 'http://ocl-cal.gc.ca/eic/site/012.nsf/eng/00873.html',
     # GB
+    'CEH Open Government Licence': 'http://eidchub.ceh.ac.uk/administration-folder/tools/ceh-standard-licence-texts/ceh-open-government-licence',
     'Natural England-OS Open Government Licence': 'http://webarchive.nationalarchives.gov.uk/20140605090108/http://www.naturalengland.org.uk/copyright/default.aspx',
     'OS OpenData Licence': 'http://www.ordnancesurvey.co.uk/docs/licences/os-opendata-licence.pdf',
     'uk-citation-required': 'http://example.com/uk-citation-required',  # No URL
