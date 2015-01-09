@@ -140,28 +140,39 @@ class CKAN(Scraper):
             # @note GB ought to clean up its licensing.
             elif self.catalog.country_code == 'gb':
                 licence = extras.get('licence')
-                if licence in (
-                    'Contains public sector information licensed under the Open Government Licence v2.0',
-                    'Licence terms and conditions apply (Open Government Licence)',
-                    'Open Data available for use under the Open Government Licence',
-                    'Open Government Licence',
-                    'Open Government Licence - http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/',
-                    'Open Government Licence, http://www.nationalarchives.gov.uk/doc/open-government-licence',
-                    'Open Government Licence, http://www.nationalarchives.gov.uk/doc/open-government-licence/',
-                    'Open Government License',
-                    'Open Government License (http://www.nationalarchives.gov.uk/doc/open-government-licence/)',
-                    'Open Government License.',
-                    'Use of this data is subject to acceptance of the Open Government Licence',
-                    '["No conditions apply", "None", "Open Government License (OGL)"]',
-                    '["None", "Open Government License (OGL)"]',
-                ):
-                    license_id = 'uk-ogl'
-                elif 'www.naturalengland.org.uk/copyright/default.aspx' in licence:
-                    license_id = 'Natural England-OS Open Government Licence'
-                elif 'https://www.ordnancesurvey.co.uk/opendatadownload/products.html' in licence:
-                    license_id = 'OS OpenData Licence'
-                elif citation_re.search(licence):
-                    license_id = 'uk-citation-required'
+                if licence:
+                    if licence in (
+                        '["No conditions apply", "None", "Open Government License (OGL)"]',
+                        '["No conditions apply", "Open Government License (OGL)", "None"]',
+                        '["None", "Open Government License (OGL)"]',
+                        'Licence terms and conditions apply (Open Government Licence)',
+                        'Open Data available for use under the Open Government Licence',
+                        'Open Government Licence',
+                        'Open Government Licence, http://www.nationalarchives.gov.uk/doc/open-government-licence',
+                        'Open Government Licence, http://www.nationalarchives.gov.uk/doc/open-government-licence/',
+                        'Open Government License (http://www.nationalarchives.gov.uk/doc/open-government-licence/)',
+                        'Open Government License',
+                        'Open Government License.',
+                        'Please read Open Government Licence (http://www.nationalarchives.gov.uk/doc/open-government-licence/)',
+                        'Use of this data is subject to acceptance of the Open Government Licence',
+                    ):
+                        license_id = 'uk-ogl'
+                    elif licence in (
+                        'Contains public sector information licensed under the Open Government Licence v2.0',
+                        'Open Government Licence - http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/',
+                    ):
+                        license_id = 'uk-ogl-2'
+                    elif licence in (
+                        'This resource is made available under the terms of the Open Government Licence [http://eidchub.ceh.ac.uk/administration-folder/tools/ceh-standard-licence-texts/ceh-open-government-licence/plain]',
+                        'Licence conditions apply. This resource is made available under the terms of the Open Government Licence. (http://eidchub.ceh.ac.uk/administration-folder/tools/ceh-standard-licence-texts/ceh-open-government-licence)',
+                    ):
+                        license_id = 'CEH Open Government Licence'
+                    elif 'www.naturalengland.org.uk/copyright/default.aspx' in licence:
+                        license_id = 'Natural England-OS Open Government Licence'
+                    elif 'https://www.ordnancesurvey.co.uk/opendatadownload/products.html' in licence:
+                        license_id = 'OS OpenData Licence'
+                    elif citation_re.search(licence):
+                        license_id = 'uk-citation-required'
             elif package.get('license_title') or package.get('license_url'):
                 self.warning('license_title or license_url but no license_id %s' % source_url)
 
@@ -180,20 +191,18 @@ class CKAN(Scraper):
                     license_url == 'http://www.opendefinition.org/licenses/cc-by' and
                     package['license_url'] == 'http://creativecommons.org/licenses/by/3.0/au/'
                 ):
-                    self.warning('extras.licence_url expected %s got %s' % (package['license_url'], license_url))
+                    self.warning('extras.licence_url expected %s got %s %s' % (package['license_url'], license_url, source_url))
             elif license_id:  # only runs if license_url not previously set
                 dataset.license_url = license_url
             else:
-                self.warning('extras.licence_url but no license_id %s' % source_url)
                 dataset.license_id = license_url
         if extras.get('licence_url_title'):
             if package.get('license_title'):
                 if extras['licence_url_title'] != package['license_title']:
-                    self.warning('extras.licence_url_title expected %s got %s' % (package['license_title'], extras['licence_url_title']))
+                    self.warning('extras.licence_url_title expected %s got %s %s' % (package['license_title'], extras['licence_url_title'], source_url))
             elif license_id:  # only runs if license_title not previously set
                 dataset.license_title = extras['licence_url_title']
             else:
-                self.warning('extras.licence_url_title but no license_id %s' % source_url)
                 dataset.license_id = extras['licence_url_title']
 
         try:
@@ -354,9 +363,9 @@ licence_url_to_license_id = {
     'http://www.nationalarchives.gov.uk/doc/open-government-licence/':
         'uk-ogl',
     'http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/':
-        'uk-ogl',
+        'uk-ogl-2',
     'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/':
-        'uk-ogl',
+        'uk-ogl-2',
     'http://www.naturalengland.org.uk/copyright/default.aspx':
         'Natural England-OS Open Government Licence',
     'http://www.ordnancesurvey.co.uk/docs/licences/os-opendata-licence.pdf':
