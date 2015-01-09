@@ -62,7 +62,7 @@ class Distribution(models.Model):  # dcat:Distribution
     custom_properties = ArrayField(dbtype='text')
 
     # Additional fields
-    country_code = models.CharField(max_length=2, db_index=True)
+    country_code = models.CharField(max_length=3, db_index=True)
 
     # @see http://www.w3.org/TR/vocab-dcat/
     title = models.TextField(default='')  # dct
@@ -80,7 +80,7 @@ class Distribution(models.Model):  # dcat:Distribution
     mediaType = models.TextField(default='', db_index=True)  # dcat
 
     # CSV validation # @todo Code review
-    validation_errors = models.TextField(null=True)
+    validation_errors = ArrayField(dbtype='text')
     validation_encoding = models.TextField(null=True)
     validation_headers = models.TextField(null=True)
     validation_content_type = models.TextField(null=True)

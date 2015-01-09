@@ -29,6 +29,17 @@ catalogs = [
     Catalog('us', 'http://catalog.data.gov/', scraper=CKAN),
     Catalog('uy', 'https://catalogodatos.gub.uy/', scraper=CKAN),
 
+
+    # Canadian cities
+    Catalog('mtl', 'http://donnees.ville.montreal.qc.ca/', scraper=CKAN),
+    Catalog('shr', 'http://donnees.ville.sherbrooke.qc.ca/', scraper=CKAN),
+    Catalog('ott', 'http://data.ottawa.ca/', scraper=CKAN),
+    Catalog('sur', 'http://data.surrey.ca/', scraper=CKAN),
+    Catalog('wrc', 'http://data.whiterockcity.ca/', scraper=CKAN),
+    Catalog('tol', 'https://data.tol.ca/', scraper=Socrata),
+    Catalog('edm', 'https://data.edmonton.ca/', scraper=Socrata),
+    Catalog('peg', 'https://data.winnipeg.ca/', scraper=Socrata),
+    Catalog('stc', 'https://data.strathcona.ca/', scraper=Socrata),     
     # Over 1000:
     # Catalog('fr', 'http://data.gouv.fr/'), # 13756 CKAN is hidden API https://www.data.gouv.fr/fr/apidoc/
     # Catalog('kr', 'https://www.data.go.kr/'),  # 9268 API
