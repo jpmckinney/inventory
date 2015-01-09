@@ -7,7 +7,7 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('inventory', '0009_auto_20141115_2116'),
+        ('inventory', '0008_distribution_validation_content_type'),
     ]
 
     operations = [
