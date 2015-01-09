@@ -202,7 +202,7 @@ license_ids = {
     'publiek-domein':                              'http://creativecommons.org/publicdomain/mark/1.0/',
     # PH confirmed via email
     'Attribution (CC-BY)':                         'http://creativecommons.org/licenses/by/3.0/ph/',
-    'Attribution-Share Alike (BY-SA)':             'http://creativecommons.org/licenses/by-sa/',
+    'Attribution-Share Alike (BY-SA)':             'http://creativecommons.org/licenses/by-sa/3.0/ph/',
 
     # Open Data Commons
     'odc-by':   'http://opendatacommons.org/licenses/by/1.0/',
@@ -216,6 +216,7 @@ license_ids = {
     'CEH Open Government Licence': 'http://eidchub.ceh.ac.uk/administration-folder/tools/ceh-standard-licence-texts/ceh-open-government-licence',
     'Natural England-OS Open Government Licence': 'http://webarchive.nationalarchives.gov.uk/20140605090108/http://www.naturalengland.org.uk/copyright/default.aspx',
     'OS OpenData Licence': 'http://www.ordnancesurvey.co.uk/docs/licences/os-opendata-licence.pdf',
+    'uk-ogl-2': 'http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/',
     'uk-citation-required': 'http://example.com/uk-citation-required',  # No URL
     # IE
     'gov-copyright': 'http://www.irishstatutebook.ie/2000/en/act/pub/0028/sec0191.html#sec191',
@@ -228,6 +229,12 @@ license_ids = {
     'helsinkikanava-opendata-tos': 'http://open.helsinkikanava.fi/tos.html',
     'hri-tietoaineistot-lisenssi-nimea': 'http://www.hri.fi/lisenssit/hri-nimea/',
     'http://teto.tampere.fi/lisenssit/tre_avoimen_datan_lisenssi.pdf': 'http://teto.tampere.fi/lisenssit/tre_avoimen_datan_lisenssi.pdf',
+    'http://www.maanmittauslaitos.fi/aineistot-palvelut/rajapintapalvelut/karttakuvapalvelu-wms': 'http://www.maanmittauslaitos.fi/aineistot-palvelut/rajapintapalvelut/karttakuvapalvelu-wms',
+    'http://www.maanmittauslaitos.fi/aineistot-palvelut/rajapintapalvelut/karttakuvapalvelu-wms,': 'http://www.maanmittauslaitos.fi/aineistot-palvelut/rajapintapalvelut/karttakuvapalvelu-wms',
+    'http://www.maanmittauslaitos.fi/aineistot-palvelut/verkkopalvelut/kiinteistotietopalvelu': 'http://www.maanmittauslaitos.fi/aineistot-palvelut/verkkopalvelut/kiinteistotietopalvelu',
+    'http://www.maanmittauslaitos.fi/avoindata_lisenssi_versio1_20120501': 'http://www.maanmittauslaitos.fi/avoindata_lisenssi_versio1_20120501',
+    'http://www.maanmittauslaitos.fi/node/300': 'http://www.maanmittauslaitos.fi/laserkeilausindeksit',
+    'http://www.maanmittauslaitos.fi/kartat/ilmakuvat/ilma-ortokuvien-indeksikartat': 'http://www.maanmittauslaitos.fi/kartat/ilmakuvat/ilma-ortokuvien-indeksikartat',
     'ilmoitettumuualla': 'http://www.hri.fi/lisenssit',
     'kmo-aluejakorajat': 'http://www.hri.fi/lisenssit/kmo-aluejakorajat/',
     # UY https://catalogodatos.gub.uy/
@@ -256,6 +263,11 @@ license_urls = {
     'http://www.opendefinition.org/licenses/cc-by-sa': 'http://creativecommons.org/licenses/by-sa/',
 }
 license_titles = {
+    # EE
+    'Creative Commons BY-SA 3.0': 'http://creativecommons.org/licenses/by-sa/3.0/ee/',
+    'Creative Commons BY 3.0': 'http://creativecommons.org/licenses/by/3.0/ee/',
+
+    # Creative Commons
     'cc-nc':    'http://creativecommons.org/licenses/nc/1.0/',
     # Imprecise
     'cc-by':    'http://creativecommons.org/licenses/by/',
