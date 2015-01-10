@@ -6,7 +6,7 @@ from .open_colibri import OpenColibri
 from .socrata import Socrata
 
 from .rdf import RDF
-# from .rss import RSS
+from .rss import RSS
 
 # from .fr import Fr
 
@@ -17,12 +17,12 @@ catalogs = [
     Catalog('ca', 'http://data.gc.ca/data/en/', scraper=CKAN),
     Catalog('cl', 'http://api.recursos.datos.gob.cl/', scraper=Junar, parameters={'auth_key': '6ae305b9ad9923f768879e851addf143c3461182'}),
     Catalog('cr', 'http://gobiernodigitalcr.cloudapi.junar.com/', scraper=Junar, parameters={'auth_key': 'a99bb53e81c5fcaec72fd313fcb97c7306e13d3d'}),
-    Catalog('ee', 'https://opendata.riik.ee/', scraper=CKAN, get_only=False),  # HTTP 500 Server Error
+    Catalog('ee', 'https://opendata.riik.ee/', scraper=CKAN, get_only=False),
     Catalog('es', 'http://datos.gob.es/sites/default/files/catalogo.rdf', scraper=RDF),
     Catalog('fi', 'https://www.avoindata.fi/data/en/', scraper=CKAN),
     # Catalog('fr', 'https://www.data.gouv.fr/', scraper=Fr),
     Catalog('gb', 'http://data.gov.uk/', scraper=CKAN, parameters={'fq': 'license_id-is-ogl:true'}),
-    # Catalog('gh', 'http://data.gov.gh/dataset-rss.xml', scraper=RSS),  # OGPL
+    Catalog('gh', 'http://data.gov.gh/dataset-rss.xml', scraper=RSS),  # OGPL
     Catalog('gr', 'http://data.gov.gr/', scraper=OpenColibri),
     Catalog('id', 'http://data.id/', scraper=CKAN),
     Catalog('ie', 'http://data.gov.ie/', scraper=CKAN),

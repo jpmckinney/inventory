@@ -1,6 +1,5 @@
 import requests
 from lxml import etree
-from django.forms.models import model_to_dict
 
 from .base import Scraper
 from ..models import Dataset, Distribution
@@ -36,26 +35,23 @@ class RDF(Scraper):
         dataset = self.find_or_initialize(Dataset, country_code=self.catalog.country_code, name=identifier)
         dataset.custom_properties = [tag for tag in map(lambda node: node.tag, package.xpath('./*')) if tag not in rdf_dataset_properties]
         dataset.source_url = source_url
-        try:
-            for dataset_property, column_name in dataset_properties.items():
-                if column_name in ('keyword', 'theme'):
-                    values = self.get_values(package, dataset_property)
-                    if values:
-                        setattr(dataset, column_name, values)
-                elif column_name in ('description', 'language', 'spatial', 'title'):
-                    values = self.get_values(package, dataset_property)
-                    if values:
-                        setattr(dataset, column_name, values[0])
-                elif column_name in ('issued', 'modified'):
-                    value = self.get_value(package, dataset_property)
-                    if value is not None and value not in ('T00:00:00Z', 'Z'):
-                        setattr(dataset, column_name, value.replace('ZZ', 'Z'))  # e.g. "2010-11-17T00:00:00ZZ"
-                else:
-                    value = self.get_value(package, dataset_property)
-                    if value is not None:
-                        setattr(dataset, column_name, value)
-        except KeyError:
-            self.info(etree.tostring(package))
+        for dataset_property, column_name in dataset_properties.items():
+            if column_name in ('keyword', 'theme'):
+                values = self.get_values(package, dataset_property)
+                if values:
+                    setattr(dataset, column_name, values)
+            elif column_name in ('description', 'language', 'spatial', 'title'):
+                values = self.get_values(package, dataset_property)
+                if values:
+                    setattr(dataset, column_name, values[0])
+            elif column_name in ('issued', 'modified'):
+                value = self.get_value(package, dataset_property)
+                if value is not None and value not in ('T00:00:00Z', 'Z'):
+                    setattr(dataset, column_name, value.replace('ZZ', 'Z'))  # e.g. "2010-11-17T00:00:00ZZ"
+            else:
+                value = self.get_value(package, dataset_property)
+                if value is not None:
+                    setattr(dataset, column_name, value)
 
         dataset.save()
 
@@ -85,7 +81,7 @@ class RDF(Scraper):
 
     def get_values(self, node, path):
         values = []
-        for child in self.xpath(node, './%s' % path):
+        for child in self.xpath(node, path):
             value = child.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource', child.text)
             if value:
                 values.append(value)
@@ -132,17 +128,17 @@ rdf_distribution_properties = frozenset([
 ])
 
 dataset_properties = {
-    'dct:title': 'title',
-    'dct:description': 'description',
-    'dct:issued': 'issued',
-    'dct:modified': 'modified',
-    'dc:language': 'language',
-    'dct:publisher': 'publisher',
-    'dct:identifier': 'identifier',
-    'dct:spatial': 'spatial',
-    'dcat:theme': 'theme',
-    'dcat:keyword': 'keyword',
-    'dct:license': 'license',
+    './dct:title': 'title',
+    './dct:description': 'description',
+    './dct:issued': 'issued',
+    './dct:modified': 'modified',
+    './dc:language': 'language',
+    './dct:publisher': 'publisher',
+    './dct:identifier': 'identifier',
+    './dct:spatial': 'spatial',
+    './dcat:theme': 'theme',
+    './dcat:keyword': 'keyword',
+    './dct:license': 'license',
     # dcat:distribution
     # dct:accrualPeriodicity
     # dct:temporal
@@ -151,14 +147,14 @@ dataset_properties = {
     # dct:valid "Vigencia del recurso" (date-time)
 }
 distribution_properties = {
-    'dct:title': 'title',
-    'dct:description': 'description',
-    'dct:issued': 'issued',
-    'dct:modified': 'modified',
-    'dct:license': 'license',
-    'dcat:accessURL': 'accessURL',
-    'dcat:byteSize': 'byteSize',
-    'dct:format': 'format',
+    './dct:title': 'title',
+    './dct:description': 'description',
+    './dct:issued': 'issued',
+    './dct:modified': 'modified',
+    './dct:license': 'license',
+    './dcat:accessURL': 'accessURL',
+    './dcat:byteSize': 'byteSize',
+    './dct:format': 'format',
     # dct:relation "+info" (text, url)
 }
 
