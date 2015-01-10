@@ -5,13 +5,13 @@ from jsonfield import JSONField
 
 class Dataset(models.Model):  # dcat:Dataset
     # Identification and common fields
-    country_code = models.CharField(max_length=2, db_index=True)
+    country_code = models.CharField(max_length=3, db_index=True)
     name = models.CharField(max_length=500)  # @see https://github.com/ckan/ckan/blob/525fd7d4c6d9987504d2d20c383b83382cefcab3/ckan/model/package.py#L29
     json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
 
     # Additional fields
-    source_url = models.URLField(unique=True)
+    source_url = models.URLField(unique=True, max_length=500)
     extras = JSONField(default={})
     extras_keys = ArrayField(dbtype='text')
 
@@ -72,9 +72,9 @@ class Distribution(models.Model):  # dcat:Distribution
     license = models.URLField(default='', db_index=True)  # dct
     accessURL = models.URLField(default='', max_length=2000)  # dcat (length 1692 observed)
     byteSize = models.BigIntegerField(null=True)  # dcat
+    format = models.TextField(default='')  # dct
     mimetype = models.TextField(default='')
     mimetype_inner = models.TextField(default='')
-    format = models.TextField(default='')  # dct
 
     # Clean properties
     mediaType = models.TextField(default='', db_index=True)  # dcat
