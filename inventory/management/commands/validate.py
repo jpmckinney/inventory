@@ -27,10 +27,8 @@ class Handler(ColorizingStreamHandler):
 logger = logging.getLogger()  # 'inventory' to quiet requests
 
 
-
 class Command(InventoryCommand):
-
-    args = '<country_code country_code ...>'
+    args = '<identifier identifier ...>'
     help = 'Validate files formats'
 
     option_list = InventoryCommand.option_list + (
@@ -43,8 +41,6 @@ class Command(InventoryCommand):
     )
 
     def handle(self, *args, **options):
-        
-        
         self.warnings = 0
         self.options = options
 
@@ -56,21 +52,15 @@ class Command(InventoryCommand):
         self.ruby_path = os.getcwd() + '/inventory/validators/csv/validate_csv.rb'
 
         for catalog in self.catalogs:
-            qs = Distribution.objects.filter(mediaType='text/csv'
-                ).filter(valid__isnull=True
-                ).filter(country_code=catalog.country_code)
+            qs = Distribution.objects.filter(mediaType='text/csv').filter(valid__isnull=True).filter(division_id=catalog.division_id)
 
             if self.options["nb_distribution"] != 0:
-
                 qs = qs[0:int(self.options["nb_distribution"])]
 
             for distribution in qs:
                 self.execute_validation(distribution)
 
-
-
     def execute_validation(self, distribution):
-
         url = quote(distribution.accessURL, safe="%/:=&?~#+!$,;'@()*[]")
 
         try:
@@ -82,7 +72,6 @@ class Command(InventoryCommand):
                 distribution.validation_errors = ["too_large"]
                 distribution.save()
             else:
-
                 logger.info('Validating %s' % url)
 
                 (result, data) = self.csv_validator(url, self.options["nb_lines"])
@@ -95,35 +84,26 @@ class Command(InventoryCommand):
                     distribution.validation_headers = json.dumps(data["headers"])
                     distribution.validation_extension = data["extension"]
                     distribution.save()
-
                 else:
                     logger.error('Error: %s' % data)            
-        except :
+        except:
            distribution.validation_headers = ''
            distribution.valid = False
            distribution.validation_errors = ["not_found"]
            distribution.save()
 
-
-
     def csv_validator(self,url, nb_lines):
-        
         #TODO - Relative path does not work... will have to find a better way than full path
         command_line = '"' + url + '"'
-
 
         if nb_lines != 0:
             command_line += ' ' + nb_lines
 
         response = muterun_rb(self.ruby_path, command_line)
 
-
         if response.exitcode == 0:
           json_content = response.stdout.decode("utf-8")
           data = json.loads(json_content)
-
           return (True,  data)
-
         else:
           return (False,  response.stderr.decode("utf-8"))
-

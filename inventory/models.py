@@ -5,7 +5,7 @@ from jsonfield import JSONField
 
 class Dataset(models.Model):  # dcat:Dataset
     # Identification and common fields
-    country_code = models.CharField(max_length=3, db_index=True)
+    division_id = models.CharField(max_length=150, db_index=True)
     name = models.CharField(max_length=500)  # @see https://github.com/ckan/ckan/blob/525fd7d4c6d9987504d2d20c383b83382cefcab3/ckan/model/package.py#L29
     json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
@@ -48,10 +48,10 @@ class Dataset(models.Model):  # dcat:Dataset
     license = models.URLField(default='', db_index=True)  # dct
 
     class Meta:
-        unique_together = (('country_code', 'name'),)
+        unique_together = (('division_id', 'name'),)
 
     def __str__(self):
-        return '{}: {}'.format(self.country_code, self.name)
+        return '{}: {}'.format(self.division_id, self.name)
 
 
 class Distribution(models.Model):  # dcat:Distribution
@@ -62,7 +62,7 @@ class Distribution(models.Model):  # dcat:Distribution
     custom_properties = ArrayField(dbtype='text')
 
     # Additional fields
-    country_code = models.CharField(max_length=3, db_index=True)
+    division_id = models.CharField(max_length=150, db_index=True)
 
     # @see http://www.w3.org/TR/vocab-dcat/
     title = models.TextField(default='')  # dct
@@ -91,4 +91,4 @@ class Distribution(models.Model):  # dcat:Distribution
         unique_together = (('dataset', '_id'),)
 
     def __str__(self):
-        return '{}: {} {}'.format(self.country_code, self.dataset, self._id)
+        return '{}: {} {}'.format(self.division_id, self.dataset, self._id)

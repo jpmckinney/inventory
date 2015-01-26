@@ -25,7 +25,7 @@ class Command(InventoryCommand):
         self.setup(*args, **options)
 
         if args:
-            criteria = {'country_code__in': [catalog.country_code for catalog in self.catalogs]}
+            criteria = {'division_id__in': [catalog.division_id for catalog in self.catalogs]}
         else:
             criteria = {}
 
@@ -134,21 +134,23 @@ class Command(InventoryCommand):
 
             # MD http://data.gov.md/ro/termeni-si-conditii
             # MD doesn't take advantage of CKAN's per-dataset licensing.
-            # qs = Dataset.objects.filter(country_code='md'); qs.filter(license_id='notspecified').count() / qs.count()
-            qs.filter(country_code='md', license_id='notspecified').update(license='http://data.gov.md/en/terms-and-conditions')
+            # qs = Dataset.objects.filter(division_id='ocd-division/country:md'); qs.filter(license_id='notspecified').count() / qs.count()
+            qs.filter(division_id='ocd-division/country:md', license_id='notspecified').update(license='http://data.gov.md/en/terms-and-conditions')
             # MX displays "Libro Uso MX" for all datasets.
             # cc-by http://catalogo.datos.gob.mx/dataset/mexico-prospero-estadisticas-nacionales
             # notspecified http://catalogo.datos.gob.mx/dataset/niveles-actuales-de-rios
-            qs.filter(country_code='mx', license_id__in=('cc-by', 'notspecified', '')).update(license='http://datos.gob.mx/libreusomx/')
+            qs.filter(division_id='ocd-division/country:mx', license_id__in=('cc-by', 'notspecified', '')).update(license='http://datos.gob.mx/libreusomx/')
 
             # ID http://data.id/lisensi-dan-atribusi.html
-            qs.filter(country_code='id', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/4.0/')
+            qs.filter(division_id='ocd-division/country:id', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/4.0/')
             # IT http://www.dati.gov.it/content/note-legali
-            qs.filter(country_code='it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
+            qs.filter(division_id='ocd-division/country:it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
+            # KE "When a dataset publication permissions is marked as 'public', CC-0 is what we mean."
+            qs.filter(division_id='ocd-division/country:ke', license_id='Public Domain').update(license='http://creativecommons.org/publicdomain/zero/1.0/')
 
             # UK and RO use the same license ID for different licenses.
-            qs.filter(country_code='gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/')
-            qs.filter(country_code='ro', license_id='uk-ogl').update(license='http://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf')
+            qs.filter(division_id='ocd-division/country:gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/')
+            qs.filter(division_id='ocd-division/country:ro', license_id='uk-ogl').update(license='http://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf')
 
             for license_id, license in license_ids.items():
                 qs.filter(license_id=license_id).update(license=license)

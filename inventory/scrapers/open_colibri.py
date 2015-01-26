@@ -22,7 +22,7 @@ class OpenColibri(Scraper):
     def save_package(self, package):
         source_url = '%sapi/public/v1/datasetsapi/%s/' % (self.catalog.url, package['id'])
 
-        dataset = self.find_or_initialize(Dataset, country_code=self.catalog.country_code, name=package['id'])
+        dataset = self.find_or_initialize(Dataset, division_id=self.catalog.division_id, name=package['id'])
         dataset.json = package
         dataset.custom_properties = [key for key, value in package.items() if value and key not in opencolibri_dataset_properties]
         dataset.source_url = source_url
@@ -36,7 +36,7 @@ class OpenColibri(Scraper):
             distribution = self.find_or_initialize(Distribution, dataset=dataset, _id=resource['id'])
             distribution.json = resource
             distribution.custom_properties = [key for key, value in resource.items() if value and key not in opencolibri_distribution_properties]
-            distribution.country_code = dataset.country_code
+            distribution.division_id = dataset.division_id
             for distribution_property, column_name in distribution_properties.items():
                 if resource.get(distribution_property) is not None:
                     setattr(distribution, column_name, resource[distribution_property])

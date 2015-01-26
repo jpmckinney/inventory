@@ -26,7 +26,7 @@ class Socrata(Scraper):
     def save_package(self, package):
         source_url = '%s#%s' % (self.catalog.url, package['identifier'])
 
-        dataset = self.find_or_initialize(Dataset, country_code=self.catalog.country_code, name=package['identifier'])
+        dataset = self.find_or_initialize(Dataset, division_id=self.catalog.division_id, name=package['identifier'])
         dataset.json = package
         dataset.custom_properties = [key for key, value in package.items() if value and key not in socrata_dataset_properties]
         dataset.source_url = source_url
@@ -40,7 +40,7 @@ class Socrata(Scraper):
             distribution = self.find_or_initialize(Distribution, dataset=dataset, _id='%s#%s' % (package['identifier'], resource['format']))
             distribution.json = resource
             distribution.custom_properties = [key for key, value in resource.items() if value and key not in socrata_distribution_properties]
-            distribution.country_code = dataset.country_code
+            distribution.division_id = dataset.division_id
             for distribution_property in socrata_distribution_properties:
                 if resource.get(distribution_property) is not None:
                     setattr(distribution, distribution_property, resource[distribution_property])

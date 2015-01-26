@@ -32,7 +32,7 @@ class RDF(Scraper):
 
         source_url = '%s#%s' % (self.catalog.url, identifier)
 
-        dataset = self.find_or_initialize(Dataset, country_code=self.catalog.country_code, name=identifier)
+        dataset = self.find_or_initialize(Dataset, division_id=self.catalog.division_id, name=identifier)
         dataset.custom_properties = [tag for tag in map(lambda node: node.tag, package.xpath('./*')) if tag not in rdf_dataset_properties]
         dataset.source_url = source_url
         for dataset_property, column_name in dataset_properties.items():
@@ -58,7 +58,7 @@ class RDF(Scraper):
         for resource in self.xpath(package, './/dcat:Distribution'):
             distribution = self.find_or_initialize(Distribution, dataset=dataset, _id=resource.attrib['{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about'])
             distribution.custom_properties = [tag for tag in map(lambda node: node.tag, resource.xpath('./*')) if tag not in rdf_distribution_properties]
-            distribution.country_code = dataset.country_code
+            distribution.division_id = dataset.division_id
             for distribution_property, column_name in distribution_properties.items():
                 if column_name in ('description', 'title'):
                     values = self.get_values(resource, distribution_property)

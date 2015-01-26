@@ -39,7 +39,7 @@ class Junar(Scraper):
     def save_package(self, package):
         source_url = package['link']
 
-        dataset = self.find_or_initialize(Dataset, country_code=self.catalog.country_code, name=package['id'])
+        dataset = self.find_or_initialize(Dataset, division_id=self.catalog.division_id, name=package['id'])
         dataset.json = package
         dataset.custom_properties = [key for key, value in package.items() if value and key not in junar_dataset_properties]
         dataset.source_url = source_url

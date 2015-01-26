@@ -10,7 +10,7 @@ from . import InventoryCommand
 
 
 class Command(InventoryCommand):
-    args = '<country_code country_code ...>'
+    args = '<identifier identifier ...>'
     help = 'Scrapes datasets and distributions from data catalog APIs'
 
     option_list = InventoryCommand.option_list + (

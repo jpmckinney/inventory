@@ -115,7 +115,7 @@ class CKAN(Scraper):
                 else:
                     extras[extra['key']] = value
 
-        dataset = self.find_or_initialize(Dataset, country_code=self.catalog.country_code, name=package['name'])
+        dataset = self.find_or_initialize(Dataset, division_id=self.catalog.division_id, name=package['name'])
         dataset.json = package
         dataset.custom_properties = [key for key, value in package.items() if value and key not in ckan_dataset_properties]
         dataset.source_url = source_url
@@ -143,7 +143,7 @@ class CKAN(Scraper):
             if match:
                 license_id = licence_url_to_license_id[match]
             # @note GB ought to clean up its licensing.
-            elif self.catalog.country_code == 'gb':
+            elif self.catalog.division_id == 'ocd-division/country:gb':
                 licence = extras.get('licence')
                 if licence:
                     if licence in (
@@ -192,7 +192,7 @@ class CKAN(Scraper):
             if package.get('license_url'):
                 if license_url != package['license_url'] and not (
                     # @note AU's "licence_url" uses a different, valid URL for "cc-by".
-                    self.catalog.country_code == 'au' and
+                    self.catalog.division_id == 'ocd-division/country:au' and
                     license_url == 'http://www.opendefinition.org/licenses/cc-by' and
                     package['license_url'] == 'http://creativecommons.org/licenses/by/3.0/au/'
                 ):
@@ -217,7 +217,7 @@ class CKAN(Scraper):
                 distribution = self.find_or_initialize(Distribution, dataset=dataset, _id=resource['id'])
                 distribution.json = resource
                 distribution.custom_properties = [key for key, value in resource.items() if value and key not in ckan_distribution_properties]
-                distribution.country_code = dataset.country_code
+                distribution.division_id = dataset.division_id
                 for distribution_property, column_name in distribution_properties.items():
                     if resource.get(distribution_property) is not None:
                         setattr(distribution, column_name, resource[distribution_property])

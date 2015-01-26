@@ -24,7 +24,7 @@ class RSS(Scraper):
 
         source_url = '%s#%s' % (self.catalog.url, identifier)
 
-        dataset = self.find_or_initialize(Dataset, country_code=self.catalog.country_code, name=identifier)
+        dataset = self.find_or_initialize(Dataset, division_id=self.catalog.division_id, name=identifier)
         dataset.custom_properties = [tag for tag in map(lambda node: node.tag, package.xpath('./*')) if tag not in rss_dataset_properties]
         dataset.source_url = source_url
         for dataset_property, column_name in dataset_properties.items():

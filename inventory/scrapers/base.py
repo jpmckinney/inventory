@@ -33,12 +33,12 @@ class Scraper(object):
 
 
 class Catalog(object):
-    def __init__(self, country_code, url, *, scraper, get_only=True, parameters={}):
-        self.country_code = country_code
+    def __init__(self, division_id, url, *, scraper, get_only=True, parameters={}):
+        self.division_id = division_id
         self.url = url
         self.scraper = scraper
         self.get_only = get_only
         self.parameters = parameters
 
     def __str__(self):
-        return '{}: {}'.format(self.country_code, self.scraper.__name__)
+        return '{}: {}'.format(self.division_id, self.scraper.__name__)

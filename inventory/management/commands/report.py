@@ -1,3 +1,5 @@
+import csv
+import itertools
 from optparse import make_option
 
 from django.db.models import Count
@@ -16,6 +18,9 @@ class Command(InventoryCommand):
         make_option('--media-types', action='store_true', dest='media_types',
                     default=False,
                     help='Report media type usage.'),
+        make_option('--structures', action='store_true', dest='structures',
+                    default=False,
+                    help='Report catalog structures.'),
     )
 
     def handle(self, *args, **options):
@@ -25,10 +30,34 @@ class Command(InventoryCommand):
             self.report(Distribution, 'mediaType', distinct='dataset_id')
         if options['licenses']:
             self.report(Dataset, 'license', distinct='id')
+        if options['structures']:
+            columns = []
+            for catalog in self.catalogs:
+                datasets = Dataset.objects.filter(division_id=catalog.division_id)
+                distributions = Distribution.objects.filter(division_id=catalog.division_id)
+                counts = datasets.values('id').annotate(count=Count('distribution'))
+                columns.append(counts.values_list('count', flat=True))
+                if datasets.count():
+                    print('{}\t{:6d}\t{:6d}\t{:7.2%}\t{:7.2%}\t{:7.2%}'.format(
+                        catalog.division_id,
+                        datasets.count(),
+                        distributions.count(),
+                        counts.filter(count=0).count() / datasets.count(),
+                        counts.filter(count=1).count() / datasets.count(),
+                        counts.filter(count__gt=1).count() / datasets.count(),
+                    ))
+
+
+            with open('structures.csv', 'w') as f:
+                writer = csv.writer(f)
+                writer.writerow([catalog.division_id for catalog in self.catalogs])
+                for row in itertools.zip_longest(*columns):
+                    writer.writerow(row)
+
 
     def report(self, klass, field, *, distinct):
         for catalog in self.catalogs:
-            count = Dataset.objects.filter(country_code=catalog.country_code).count()
-            print('{} ({})'.format(catalog.country_code, count))
-            for value in klass.objects.filter(country_code=catalog.country_code).values(field).annotate(count=Count(distinct, distinct=True)).order_by('count'):
+            count = Dataset.objects.filter(division_id=catalog.division_id).count()
+            print('{} ({})'.format(catalog.division_id, count))
+            for value in klass.objects.filter(division_id=catalog.division_id).values(field).annotate(count=Count(distinct, distinct=True)).order_by('count'):
                 print('  {:7.2%} {} ({})'.format(value['count'] / count, value[field], value['count']))

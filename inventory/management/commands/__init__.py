@@ -20,7 +20,7 @@ class Handler(ColorizingStreamHandler):
 
 
 class InventoryCommand(BaseCommand):
-    args = '<country_code country_code ...>'
+    args = '<identifier identifier ...>'
 
     option_list = BaseCommand.option_list + (
         make_option('--exclude', action='store_true', dest='exclude',
@@ -54,7 +54,9 @@ class InventoryCommand(BaseCommand):
     def setup(self, *args, **options):
         self.logger.setLevel(options['level'] or logging.DEBUG)
 
+        args = ['ocd-division/country:{}'.format(arg) for arg in args]
+
         self.catalogs = []
         for catalog in catalogs:
-            if not args or catalog.country_code in args and not options['exclude'] or catalog.country_code not in args and options['exclude']:
+            if not args or catalog.division_id in args and not options['exclude'] or catalog.division_id not in args and options['exclude']:
                 self.catalogs.append(catalog)
