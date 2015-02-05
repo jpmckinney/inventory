@@ -140,8 +140,8 @@ dataset_properties = {
     './dcat:keyword': 'keyword',
     './dct:license': 'license',
     # dcat:distribution
-    # dct:accrualPeriodicity
-    # dct:temporal
+    # dct:accrualPeriodicity (see below)
+    # dct:temporal (see below)
     # dct:conformsTo "Normativa" (url)
     # dct:references "Otros recursos" (url)
     # dct:valid "Vigencia del recurso" (date-time)
