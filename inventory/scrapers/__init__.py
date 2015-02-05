@@ -20,7 +20,7 @@ catalogs = [
     Catalog('ocd-division/country:ee', 'https://opendata.riik.ee/', scraper=CKAN, get_only=False),
     Catalog('ocd-division/country:es', 'http://datos.gob.es/sites/default/files/catalogo.rdf', scraper=RDF),
     Catalog('ocd-division/country:fi', 'https://www.avoindata.fi/data/en/', scraper=CKAN),
-    Catalog('ocd-division/country:fr', 'https://www.data.gouv.fr/', scraper=Fr),
+    # Catalog('ocd-division/country:fr', 'https://www.data.gouv.fr/', scraper=Fr),
     Catalog('ocd-division/country:gb', 'http://data.gov.uk/', scraper=CKAN, parameters={'fq': 'license_id-is-ogl:true'}),
     Catalog('ocd-division/country:gh', 'http://data.gov.gh/dataset-rss.xml', scraper=RSS),  # OGPL
     Catalog('ocd-division/country:gr', 'http://data.gov.gr/', scraper=OpenColibri),
