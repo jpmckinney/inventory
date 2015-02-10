@@ -28,11 +28,14 @@ class Dataset(models.Model):  # dcat:Dataset
     theme = ArrayField(dbtype='text')  # dcat
     keyword = ArrayField(dbtype='text')  # dcat
     contactPoint = models.TextField(default='')  # dcat
+    landingPage = models.URLField(default='', max_length=500)  # dcat (length 401 observed)
+
+    # CKAN
     maintainer = models.TextField(default='')
     maintainer_email = models.EmailField(default='')
     author = models.TextField(default='')
     author_email = models.EmailField(default='')
-    landingPage = models.URLField(default='', max_length=500)  # dcat (length 401 observed)
+    type = models.TextField(default='')
 
     # @see http://project-open-data.github.io/v1.1/schema/
     # @see http://project-open-data.github.io/v1.1/schema/#accessLevel

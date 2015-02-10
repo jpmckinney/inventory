@@ -79,6 +79,9 @@ class CKAN(Scraper):
                     yield package
 
     def save_package(self, package):
+        if package['type'] == 'harvest':
+            return
+
         source_url = '%sapi/3/action/package_show?id=%s' % (self.catalog.url, package['name'])
 
         extras = {}
@@ -268,6 +271,7 @@ ckan_dataset_properties = frozenset([
     'owner_org',
     'tags',
     'title',
+    'type',
     'url',
 
     # Not modeled
@@ -285,7 +289,6 @@ ckan_dataset_properties = frozenset([
     'revision_timestamp',
     'state',
     'tracking_summary',
-    'type',
     'version',
 ])
 ckan_distribution_properties = frozenset([
@@ -330,6 +333,7 @@ dataset_properties = {
     'author': 'author',  # dcat:contactPoint vcard:fn
     'author_email': 'author_email',  # dcat:contactPoint vcard:hasEmail
     'url': 'landingPage',
+    'type': 'type',
 
     # CKAN doesn't have:
     # * dct:language
