@@ -13,7 +13,7 @@ gb_open_license_re = re.compile(r'open government licen[sc]e', re.IGNORECASE)
 class Socrata(Scraper):
     def get_packages(self):
         try:
-            packages = requests.get(self.catalog.url + 'data.json').json()
+            packages = requests.get(self.catalog.url + 'data.json').json()['dataset']
         except requests.packages.urllib3.exceptions.ProtocolError:
             self.error('ProtocolError %s' % self.catalog.url)
             return
@@ -33,17 +33,21 @@ class Socrata(Scraper):
         for dataset_property, column_name in dataset_properties.items():
             if package.get(dataset_property) is not None:
                 setattr(dataset, column_name, package[dataset_property])
+        if package['contactPoint']['fn'] != '<Nobody>' and package['contactPoint']['hasEmail'] != 'mailto:':
+            dataset.maintainer = package['contactPoint']['fn']
+            dataset.maintainer_email = package['contactPoint']['hasEmail']
+        dataset.publisher = package['publisher']['name']
 
         dataset.save()
 
         for resource in package.get('distribution', []):
-            distribution = self.find_or_initialize(Distribution, dataset=dataset, _id='%s#%s' % (package['identifier'], resource['format']))
+            distribution = self.find_or_initialize(Distribution, dataset=dataset, _id='%s#%s' % (package['identifier'], resource['mediaType']))
             distribution.json = resource
             distribution.custom_properties = [key for key, value in resource.items() if value and key not in socrata_distribution_properties]
             distribution.division_id = dataset.division_id
-            for distribution_property in socrata_distribution_properties:
+            for distribution_property, column_name in distribution_properties.items():
                 if resource.get(distribution_property) is not None:
-                    setattr(distribution, distribution_property, resource[distribution_property])
+                    setattr(distribution, column_name, resource[distribution_property])
 
             distribution.save()
 
@@ -54,31 +58,33 @@ socrata_dataset_properties = frozenset([
     'description',
     'distribution',
     'identifier',
+    'issued',
     'keyword',
     'landingPage',
     'license',
-    'mbox',
     'modified',
     'publisher',
     'theme',
     'title',
 ])
 socrata_distribution_properties = frozenset([
-    'accessURL',
-    'format',
+    'downloadURL',
+    'mediaType',
 ])
 
 dataset_properties = {
     'accessLevel': 'accessLevel',
-    'contactPoint': 'contactPoint',
     'description': 'description',
     'identifier': 'identifier',
+    'issued': 'issued',
     'keyword': 'keyword',
     'landingPage': 'landingPage',
     'license': 'license_id',
-    'mbox': 'maintainer_email',
     'modified': 'modified',
-    'publisher': 'publisher',
     'theme': 'theme',
     'title': 'title',
+}
+distribution_properties = {
+    'accessURL': 'downloadURL',
+    'mediaType': 'mediaType',
 }
