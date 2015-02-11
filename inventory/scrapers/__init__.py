@@ -40,7 +40,7 @@ catalogs = [
     Catalog('ocd-division/country:us', 'http://catalog.data.gov/', scraper=CKAN, parameters={'fq': 'organization_type:"Federal Government"'}),
     Catalog('ocd-division/country:uy', 'https://catalogodatos.gub.uy/', scraper=CKAN),
 
-    # Canadian municipalities # @todo Use census subdivision codes, omit by default
+    # Canadian municipalities
     Catalog('ocd-division/country:ca/csd:2466023', 'http://donnees.ville.montreal.qc.ca/', scraper=CKAN),
     Catalog('ocd-division/country:ca/csd:2443027', 'http://donnees.ville.sherbrooke.qc.ca/', scraper=CKAN),
     Catalog('ocd-division/country:ca/csd:3506008', 'http://data.ottawa.ca/', scraper=CKAN),
@@ -51,12 +51,11 @@ catalogs = [
     Catalog('ocd-division/country:ca/csd:4611040', 'https://data.winnipeg.ca/', scraper=Socrata),
     Catalog('ocd-division/country:ca/csd:4811052', 'https://data.strathcona.ca/', scraper=Socrata),
 
-
-    # Over 1000:
+    # >1000:
     # Catalog('ocd-division/country:kr', 'https://www.data.go.kr/'),  # 9268 need a Korean translator for API documentation
     # Catalog('ocd-division/country:nz', 'http://data.govt.nz/'),  # 2559 SilverStripe, RSS but no pagination
 
-    # Over 100:
+    # >100:
     # Catalog('ocd-division/country:dk', 'http://data.digitaliser.dk/'),  # 757
     # Catalog('ocd-division/country:no', 'http://data.norge.no/'), # 420 Drupal CKAN is hidden
     #   Each category has an XML link in <head>. Datasets repeat across categories.
@@ -68,7 +67,7 @@ catalogs = [
     #   /api/action/package_list returns the dcterms:identifier of datasets, but
     #   no discoverable API accepts an identifier as a parameter
 
-    # Under 100:
+    # <100:
     # Catalog('ocd-division/country:jo', 'http://www.jordan.gov.jo/wps/portal/OpenData_en'),  # <100
     # Catalog('ocd-division/country:ge', 'http://data.gov.ge/'),  # 14
     # Catalog('ocd-division/country:mt', 'http://data.gov.mt/'),  # 4

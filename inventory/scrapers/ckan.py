@@ -79,7 +79,10 @@ class CKAN(Scraper):
                     yield package
 
     def save_package(self, package):
-        if package['type'] == 'harvest':
+        if package['type'] == 'harvest':  # harvest packages contain packages, not resources
+            return
+
+        if self.catalog.division_id == 'ocd-division/country:it' and package['organization'] and package['organization']['name'] not in organization_names:
             return
 
         source_url = '%sapi/3/action/package_show?id=%s' % (self.catalog.url, package['name'])
@@ -198,6 +201,11 @@ class CKAN(Scraper):
                     self.catalog.division_id == 'ocd-division/country:au' and
                     license_url == 'http://www.opendefinition.org/licenses/cc-by' and
                     package['license_url'] == 'http://creativecommons.org/licenses/by/3.0/au/'
+                ) and not (
+                    # @note GB's "licence_url" may be less specific than its "license_url".
+                    self.catalog.division_id == 'ocd-division/country:gb' and
+                    license_url == 'http://www.nationalarchives.gov.uk/doc/open-government-licence/' and
+                    package['license_url'] == 'http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/'
                 ):
                     self.warning('extras.licence_url expected %s got %s %s' % (package['license_url'], license_url, source_url))
             elif license_id:  # only runs if license_url not previously set
@@ -382,3 +390,70 @@ licence_url_to_license_id = {
     'http://www.ordnancesurvey.co.uk/oswebsite/docs/licences/os-opendata-licence.pdf':
         'OS OpenData Licence',
 }
+
+# @see http://www.dati.gov.it/content/infografica
+# $('section.module-shallow:eq(1) li a').length = 50
+# $('section.module-shallow:eq(1) li a').each(function () { console.log($(this).attr('href').replace('/catalog/dataset?', '').replace('_organization_limit=0', '').replace('organization=', '').replace('&', '')); })
+organization_names = [
+    # Amministrazioni centrali
+    'agid',
+    'aifa',
+    'inail',
+    'inps',
+    'istat',
+    'mef-ragioneria-generale-dello-stato',
+    'ministero-della-salute',
+    'ministero-politiche-agricole-alimentari-e-forestali',
+
+    # Amministrazioni regionali
+    # 'arpa-umbria',
+    # 'autorita-di-bacino-del-fiume-arno',
+    # 'commissario-sisma-apuane',
+    # 'pat',
+    # 'regione-basilicata',
+    # 'regione-friuli-venezia-giulia',
+    # 'regione-liguria',
+    # 'regione-lombardia',
+    # 'regione-piemonte',
+    # 'regione-sardegna',
+    # 'regione-toscana',
+    # 'regione-umbria',
+    # 'regione-veneto',
+
+    # Amministrazioni provinciali
+    # 'provincia-di-lucca',
+    # 'provincia-di-pisa',
+    # 'provincia-di-prato',
+    # 'provincia-di-roma',
+
+    # Communi
+    # 'comune-albano-laziale',
+    # 'comune-di-bari',
+    # 'comune-di-bologna',
+    # 'comune-di-catania',
+    # 'comune-di-cesena',
+    # 'comune-di-firenze',
+    # 'comune-di-lecce',
+    # 'comune-di-matera',
+    # 'comune-di-milano',
+    # 'comune-di-napoli',
+    # 'comune-di-palermo',
+    # 'comune-di-paliano',
+    # 'comune-di-pontecorvo',
+    # 'comune-di-posta-fibreno',
+    # 'comune-di-ravenna',
+    # 'comune-di-rignano-flaminio',
+    # 'comune-di-rimini',
+    # 'comune-di-roma',
+    # 'comune-di-roma-agenzia-per-la-mobilita',
+    # 'comune-di-torino',
+    # 'comune-di-udine',
+    # 'comune-di-venezia',
+    # 'comune-di-vicenza',
+
+    # Università
+    # 'universita-tor-vergata',
+
+    # Miscellaneous
+    # 'citta-metropolitana-di-firenze',
+]
