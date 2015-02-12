@@ -30,8 +30,5 @@ Read a report on media type usage:
 
     ./manage.py report --media-types
 
-## Bugs? Questions?
-
-This project's main repository is on GitHub: [http://github.com/opennorth/inventory](http://github.com/opennorth/inventory), where your contributions, forks, bug reports, feature requests, and feedback are greatly welcomed.
 
 Copyright (c) 2014 Open North Inc., released under the MIT license
