@@ -2,7 +2,9 @@ import csv
 import itertools
 from optparse import make_option
 
+import requests
 from django.db.models import Count
+from urllib.parse import urlparse
 
 from . import InventoryCommand
 from inventory.models import Dataset, Distribution
@@ -12,6 +14,15 @@ class Command(InventoryCommand):
     help = 'Reports the usage of property values'
 
     option_list = InventoryCommand.option_list + (
+        make_option('--dcat', action='store_true', dest='dcat',
+                    default=False,
+                    help='Report DCAT usage by CKAN catalogs.'),
+        make_option('--pod', action='store_true', dest='pod',
+                    default=False,
+                    help='Report Project Open Data Metadata Schema usage.'),
+        make_option('--schemaorg', action='store_true', dest='schemaorg',
+                    default=False,
+                    help='Report Schema.org usage.'),
         make_option('--licenses', action='store_true', dest='licenses',
                     default=False,
                     help='Report license usage.'),
@@ -30,6 +41,48 @@ class Command(InventoryCommand):
             self.report(Distribution, 'mediaType', distinct='dataset_id')
         if options['licenses']:
             self.report(Dataset, 'license', distinct='id')
+
+        if options['dcat']:
+            for catalog in self.catalogs:
+                if catalog.scraper.__name__ == 'CKAN':
+                    datasets = Dataset.objects.filter(division_id=catalog.division_id)
+                    if datasets:
+                        url = '{}dataset/{}'.format(catalog.url, datasets[0].name)
+                        response = requests.get(url, verify=False)
+                        if response.status_code == 200:
+                            url = '{}.rdf'.format(url)
+                            response = requests.get(url, verify=False)
+                        print('{} {}'.format(response.status_code, url))
+        if options['pod']:
+            for catalog in self.catalogs:
+                parsed = urlparse(catalog.url)
+                url = '{}://{}/data.json'.format(parsed.scheme, parsed.netloc)
+                response = requests.get(url, verify=False)
+                print('{} {}'.format(response.status_code, url))
+        if options['schemaorg']:
+            for catalog in self.catalogs:
+                datasets = Dataset.objects.filter(division_id=catalog.division_id)
+                if datasets:
+                    if catalog.scraper.__name__ == 'CKAN':
+                        url = '{}dataset/{}'.format(catalog.url, datasets[0].name)
+                    elif catalog.scraper.__name__ == 'OpenColibri':
+                        url = '{}dataset/{}'.format(catalog.url, datasets[0].identifier)
+                    elif catalog.scraper.__name__ == 'RDF':
+                        url = datasets[0].name
+                    else:
+                        url = datasets[0].landingPage
+                    if url:
+                        response = requests.get(url, verify=False)
+                        if response.status_code == 200:
+                            if 'http://schema.org/Dataset' in response.text:
+                                print('yes {} {}'.format(url, catalog.scraper.__name__))
+                            else:
+                                print('no  {} {}'.format(url, catalog.scraper.__name__))
+                        else:
+                            print('{} {}'.format(response.status_code, url))
+                    else:
+                        print('missing dataset url for {}'.format(catalog.division_id))
+
         if options['structures']:
             columns = []
             for catalog in self.catalogs:

@@ -22,13 +22,13 @@ Normalize licenses and media types:
 
     ./manage.py normalize --licenses --media-types
 
-Read a report on license usage:
+Read reports on the usage of licenses, media types, DCAT, Project Open Data Metadata Schema, Schema.org:
 
     ./manage.py report --licenses
-
-Read a report on media type usage:
-
     ./manage.py report --media-types
+    ./manage.py report --dcat --silent
+    ./manage.py report --pod --silent
+    ./manage.py report --schemaorg --silent
 
 
 Copyright (c) 2014 Open North Inc., released under the MIT license

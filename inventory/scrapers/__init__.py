@@ -28,7 +28,7 @@ catalogs = [
     Catalog('ocd-division/country:ie', 'http://data.gov.ie/', scraper=CKAN),
     Catalog('ocd-division/country:it', 'http://www.dati.gov.it/catalog/', scraper=CKAN),
     Catalog('ocd-division/country:ke', 'http://opendata.go.ke/', scraper=Socrata),
-    Catalog('ocd-division/country:md', 'http://data.gov.md/ckan', scraper=CKAN),
+    Catalog('ocd-division/country:md', 'http://data.gov.md/ckan/', scraper=CKAN),
     Catalog('ocd-division/country:mx', 'http://catalogo.datos.gob.mx/', scraper=CKAN),
     Catalog('ocd-division/country:nl', 'https://data.overheid.nl/data/', scraper=CKAN, get_only=False),
     Catalog('ocd-division/country:ph', 'http://data.gov.ph/catalogue/', scraper=CKAN),
