@@ -1,13 +1,12 @@
-import itertools
 import json
 import sys
 from collections import defaultdict
 from optparse import make_option
 
 import ckanapi
+import pandas as pd
 import lxml
 from django.db.models import Count
-from pandas import DataFrame, Series
 
 from . import InventoryCommand
 from inventory.models import Dataset, Distribution
@@ -25,12 +24,10 @@ class Command(InventoryCommand):
                     help='Usage of Schema.org.'),
         make_option('--federation', action='append_const', dest='reports', const='federation',
                     help='Usage of Federation technologies.'),
-        make_option('--licenses', action='append_const', dest='reports', const='licenses',
-                    help='Usage of licenses.'),
         make_option('--media-types', action='append_const', dest='reports', const='media_types',
                     help='Usage of media types.'),
-        make_option('--structures', action='append_const', dest='reports', const='structures',
-                    help='Statistics on catalog structures.'),
+        make_option('--licenses', action='append_const', dest='reports', const='licenses',
+                    help='Usage of licenses.'),
         make_option('--csv', action='store_const', dest='format', const='csv',
                     default='table',
                     help='Prints the results as CSV.'),
@@ -51,7 +48,7 @@ class Command(InventoryCommand):
         series = {}
         for catalog in self.catalogs:
             series[catalog.division_id] = getter(catalog)
-        return Series(series)
+        return pd.Series(series)
 
     def dcat(self):
         def getter(catalog):
@@ -114,22 +111,13 @@ class Command(InventoryCommand):
             elif catalog.scraper.__name__ == 'Socrata':
                 if 'federation_filter' in self.get(catalog.url).text:
                     frame['socrata'][catalog.division_id] = 1
-        return DataFrame(frame)
-
-    def media_types(self):
-        self.report(Distribution, 'mediaType', distinct='dataset_id')
+        return pd.DataFrame(frame)
 
     def licenses(self):
         self.report(Dataset, 'license', distinct='id')
 
-    def structures(self):
-        frame = defaultdict(list)
-        for catalog in self.catalogs:
-            datasets = Dataset.objects.filter(division_id=catalog.division_id)
-            counts = datasets.values('id').annotate(count=Count('distribution'))
-            frame[catalog.division_id] = Series(counts.values_list('count', flat=True))
-        return DataFrame(frame)
-        # @todo ggplot
+    def media_types(self):
+        self.report(Distribution, 'mediaType', distinct='dataset_id')
 
     def report(self, klass, field, *, distinct):
         for catalog in self.catalogs:

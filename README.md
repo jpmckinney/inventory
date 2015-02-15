@@ -30,6 +30,5 @@ Read reports on the usage of licenses, media types, catalog structures, DCAT, Pr
     ./manage.py report --federation --silent
     ./manage.py report --licenses
     ./manage.py report --media-types
-    ./manage.py report --structures --csv > structures.csv
 
 Copyright (c) 2014 Open North Inc., released under the MIT license
