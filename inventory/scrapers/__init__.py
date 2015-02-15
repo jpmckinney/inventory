@@ -17,7 +17,7 @@ catalogs = [
     Catalog('ocd-division/country:ca', 'http://data.gc.ca/data/en/', scraper=CKAN),
     Catalog('ocd-division/country:cl', 'http://api.recursos.datos.gob.cl/', scraper=Junar, parameters={'auth_key': '6ae305b9ad9923f768879e851addf143c3461182'}),
     Catalog('ocd-division/country:cr', 'http://gobiernodigitalcr.cloudapi.junar.com/', scraper=Junar, parameters={'auth_key': 'a99bb53e81c5fcaec72fd313fcb97c7306e13d3d'}),
-    Catalog('ocd-division/country:ee', 'https://opendata.riik.ee/', scraper=CKAN, get_only=False),
+    Catalog('ocd-division/country:ee', 'https://opendata.riik.ee/', scraper=CKAN, get_only=False, verify=False),
     Catalog('ocd-division/country:es', 'http://datos.gob.es/sites/default/files/catalogo.rdf', scraper=RDF),
     Catalog('ocd-division/country:fi', 'https://www.avoindata.fi/data/en/', scraper=CKAN),
     # Catalog('ocd-division/country:fr', 'https://www.data.gouv.fr/', scraper=Fr),

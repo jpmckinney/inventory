@@ -19,15 +19,13 @@ class CKAN(Scraper):
         url = self.catalog.url
 
         # Create a CKAN client.
-        # @note NL does not respond to GET requests.
         client = ckanapi.RemoteCKAN(url, get_only=self.catalog.get_only)
 
         # Get all the packages.
-        # @note 300,000 is the most datasets in any catalog.
         try:
             data_dict = self.catalog.parameters.copy()
-            data_dict['rows'] = 300000
-            package_search = client.call_action('package_search', data_dict=data_dict, verify=False)
+            data_dict['rows'] = 300000 # the most datasets in any catalog
+            package_search = client.call_action('package_search', data_dict=data_dict, verify=self.catalog.verify)
         except requests.packages.urllib3.exceptions.ProtocolError:
             self.error('ProtocolError %sapi/3/action/package_search' % url)
             return
@@ -39,7 +37,7 @@ class CKAN(Scraper):
         # @note AR over-reports the "count" in package_search.
         if packages_retrieved != packages_count and not self.catalog.parameters:
             try:
-                package_list = client.call_action('package_list', verify=False)
+                package_list = client.call_action('package_list', verify=self.catalog.verify)
             except requests.packages.urllib3.exceptions.ProtocolError:
                 self.error('ProtocolError %sapi/3/action/package_list' % url)
                 return
@@ -67,7 +65,7 @@ class CKAN(Scraper):
                     data_dict = self.catalog.parameters.copy()
                     data_dict['rows'] = packages_retrieved
                     data_dict['start'] = start
-                    package_search = client.call_action('package_search', data_dict=data_dict, verify=False)
+                    package_search = client.call_action('package_search', data_dict=data_dict, verify=self.catalog.verify)
                 except ckanapi.errors.CKANAPIError:
                     self.error('CKANAPIError %sapi/3/action/package_search?rows=%d&start=%d' % (url, packages_retrieved, start))
                 except requests.packages.urllib3.exceptions.ProtocolError:
