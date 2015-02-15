@@ -2,6 +2,8 @@ import logging
 import sys
 from optparse import make_option
 
+import requests
+import requests_cache
 from django.core.management.base import BaseCommand
 from logutils.colorize import ColorizingStreamHandler
 
@@ -26,6 +28,12 @@ class InventoryCommand(BaseCommand):
         make_option('--exclude', action='store_true', dest='exclude',
                     default=False,
                     help='Exclude the given country codes.'),
+        make_option('--no-cache', action='store_false', dest='cache',
+                    default=True,
+                    help='Do not cache HTTP GET requests.'),
+        make_option('--expire-after', action='store', dest='expire_after',
+                    type='int',
+                    help='The number of seconds after which the cache is expired.'),
         make_option('-n', '--dry-run', action='store_true', dest='dry_run',
                     default=False,
                     help='Print the plan without scraping.'),
@@ -60,3 +68,19 @@ class InventoryCommand(BaseCommand):
         for catalog in catalogs:
             if not args or catalog.division_id in args and not options['exclude'] or catalog.division_id not in args and options['exclude']:
                 self.catalogs.append(catalog)
+
+        # @see http://requests-cache.readthedocs.org/en/latest/api.html#requests_cache.core.install_cache
+        if options['cache']:
+            cache_options = {}
+            if options['expire_after']:
+                cache_options['expire_after'] = options['expire_after']
+            requests_cache.install_cache('inventory_cache', allowable_methods=('HEAD', 'GET', 'POST'), **cache_options)
+
+    def get(self, url):
+        try:
+            response = requests.get(url)
+        except requests.exceptions.SSLError:
+            response = requests.get(url, verify=False)
+        if response.status_code != 200:
+            self.warning('{} {}'.format(response.status_code, response.url))
+        return response
