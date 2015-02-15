@@ -56,6 +56,10 @@ class Dataset(models.Model):  # dcat:Dataset
     def __str__(self):
         return '{}: {}'.format(self.division_id, self.name)
 
+    @property
+    def ckan_dataset_url(self):
+        return self.source_url.replace('/api/3/action/package_show?id=', '/dataset/')
+
 
 class Distribution(models.Model):  # dcat:Distribution
     # Identification and common fields
