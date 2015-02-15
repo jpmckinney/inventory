@@ -31,13 +31,12 @@ class Dataset(models.Model):  # dcat:Dataset
     landingPage = models.URLField(default='', max_length=500)  # dcat (length 401 observed)
 
     # CKAN
+    type = models.TextField(default='')
     maintainer = models.TextField(default='')
     maintainer_email = models.EmailField(default='')
     author = models.TextField(default='')
     author_email = models.EmailField(default='')
-    type = models.TextField(default='')
 
-    # @see http://project-open-data.github.io/v1.1/schema/
     # @see http://project-open-data.github.io/v1.1/schema/#accessLevel
     accessLevel = models.TextField(default='')
 
@@ -46,8 +45,6 @@ class Dataset(models.Model):  # dcat:Dataset
     license_id = models.TextField(default='')
     license_url = models.URLField(default='')
     license_title = models.TextField(default='')
-
-    # Clean properties
     license = models.URLField(default='', db_index=True)  # dct
 
     class Meta:
@@ -80,11 +77,11 @@ class Distribution(models.Model):  # dcat:Distribution
     accessURL = models.URLField(default='', max_length=2000)  # dcat (length 1692 observed)
     byteSize = models.BigIntegerField(null=True)  # dcat
     format = models.TextField(default='')  # dct
+    mediaType = models.TextField(default='', db_index=True)  # dcat
+
+    # CKAN
     mimetype = models.TextField(default='')
     mimetype_inner = models.TextField(default='')
-
-    # Clean properties
-    mediaType = models.TextField(default='', db_index=True)  # dcat
 
     # CSV validation # @todo Code review
     validation_errors = ArrayField(dbtype='text')
