@@ -1,8 +1,6 @@
-import logging
 import signal
 import sys
 from multiprocessing import Process
-from optparse import make_option
 
 from . import InventoryCommand
 

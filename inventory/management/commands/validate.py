@@ -1,7 +1,6 @@
 # @todo code review
 import json
 import logging
-import signal
 import sys
 import os
 from urllib.parse import quote
@@ -10,10 +9,9 @@ import requests
 from optparse import make_option
 from Naked.toolshed.shell import muterun_rb
 from . import InventoryCommand
-from inventory.models import Dataset, Distribution
-from django.core.management.base import BaseCommand
+from inventory.models import Distribution
 from logutils.colorize import ColorizingStreamHandler
-from inventory.scrapers import catalogs
+
 
 class Handler(ColorizingStreamHandler):
     level_map = {
@@ -65,7 +63,7 @@ class Command(InventoryCommand):
 
         try:
             r = requests.get(url, stream=True)
-            if r is not None and 'content-length'  in r.headers and int(r.headers['content-length']) > 1000000000:
+            if r is not None and 'content-length' in r.headers and int(r.headers['content-length']) > 1000000000:
                 logger.info('File  %s is too large (%s), skipping it' % (url, r.headers['content-length']))
                 distribution.validation_headers = r.headers
                 distribution.valid = False
@@ -76,7 +74,7 @@ class Command(InventoryCommand):
 
                 (result, data) = self.csv_validator(url, self.options["nb_lines"])
 
-                if result == True:
+                if result:
                     distribution.valid = data["valid"]
                     distribution.validation_errors = data["errors"]
                     distribution.validation_content_type = data["content_type"]
@@ -85,15 +83,15 @@ class Command(InventoryCommand):
                     distribution.validation_extension = data["extension"]
                     distribution.save()
                 else:
-                    logger.error('Error: %s' % data)            
+                    logger.error('Error: %s' % data)
         except:
-           distribution.validation_headers = ''
-           distribution.valid = False
-           distribution.validation_errors = ["not_found"]
-           distribution.save()
+            distribution.validation_headers = ''
+            distribution.valid = False
+            distribution.validation_errors = ["not_found"]
+            distribution.save()
 
-    def csv_validator(self,url, nb_lines):
-        #TODO - Relative path does not work... will have to find a better way than full path
+    def csv_validator(self, url, nb_lines):
+        # TODO - Relative path does not work... will have to find a better way than full path
         command_line = '"' + url + '"'
 
         if nb_lines != 0:
@@ -102,8 +100,8 @@ class Command(InventoryCommand):
         response = muterun_rb(self.ruby_path, command_line)
 
         if response.exitcode == 0:
-          json_content = response.stdout.decode("utf-8")
-          data = json.loads(json_content)
-          return (True,  data)
+            json_content = response.stdout.decode("utf-8")
+            data = json.loads(json_content)
+            return (True,  data)
         else:
-          return (False,  response.stderr.decode("utf-8"))
+            return (False,  response.stderr.decode("utf-8"))

@@ -4,6 +4,7 @@ from lxml import etree
 from .base import Scraper
 from ..models import Dataset, Distribution
 
+
 class RDF(Scraper):
     def get_packages(self):
         # Transforming a graph of triples with rdflib into Django objects is

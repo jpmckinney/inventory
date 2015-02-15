@@ -3,7 +3,8 @@ from datetime import datetime
 from lxml import etree
 
 from .base import Scraper
-from ..models import Dataset, Distribution
+from ..models import Dataset
+
 
 class RSS(Scraper):
     def get_packages(self):

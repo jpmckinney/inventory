@@ -3,6 +3,7 @@ import requests
 from .base import Scraper
 from ..models import Dataset, Distribution
 
+
 class OpenColibri(Scraper):
     # http://data.gov.gr/api/public/v1/datasets/?format=json has "country" as an
     # object instead of as a string, adds "maintainingGroup", properly expands
@@ -46,7 +47,6 @@ class OpenColibri(Scraper):
                     distribution.accessURL = resource['uri']
                 if resource.get('file') and resource.get('uri'):
                     self.warning("both file and uri are set %s" % source_url)
-
 
             distribution.save()
 

@@ -7,7 +7,6 @@ import requests_cache
 from django.core.management.base import BaseCommand
 from logutils.colorize import ColorizingStreamHandler
 
-from inventory.models import Dataset
 from inventory.scrapers import catalogs
 
 

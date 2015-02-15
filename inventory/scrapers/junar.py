@@ -3,7 +3,8 @@ from datetime import datetime
 import requests
 
 from .base import Scraper
-from ..models import Dataset, Distribution
+from ..models import Dataset
+
 
 class Junar(Scraper):
     # The Junar API has no endpoint for listing all datasets. Junar has

@@ -24,7 +24,7 @@ class CKAN(Scraper):
         # Get all the packages.
         try:
             data_dict = self.catalog.parameters.copy()
-            data_dict['rows'] = 300000 # the most datasets in any catalog
+            data_dict['rows'] = 300000  # the most datasets in any catalog
             package_search = client.call_action('package_search', data_dict=data_dict, verify=self.catalog.verify)
         except requests.packages.urllib3.exceptions.ProtocolError:
             self.error('ProtocolError %sapi/3/action/package_search' % url)
@@ -121,7 +121,7 @@ class CKAN(Scraper):
 
         dataset = self.find_or_initialize(Dataset, division_id=self.catalog.division_id, name=package['name'])
         dataset.json = package
-        dataset.custom_properties = [key for key, value in package.items() if value and key not in ckan_dataset_properties]
+        dataset.custom_properties = [k for k, v in package.items() if v and k not in ckan_dataset_properties]
         dataset.source_url = source_url
         dataset.extras = extras
         dataset.extras_keys = list(set(extras.keys()))
@@ -225,7 +225,7 @@ class CKAN(Scraper):
             for resource in package['resources']:
                 distribution = self.find_or_initialize(Distribution, dataset=dataset, _id=resource['id'])
                 distribution.json = resource
-                distribution.custom_properties = [key for key, value in resource.items() if value and key not in ckan_distribution_properties]
+                distribution.custom_properties = [k for k, v in resource.items() if v and k not in ckan_distribution_properties]
                 distribution.division_id = dataset.division_id
                 for distribution_property, column_name in distribution_properties.items():
                     if resource.get(distribution_property) is not None:

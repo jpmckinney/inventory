@@ -1,6 +1,5 @@
 import mimetypes
 import re
-from collections import OrderedDict
 from optparse import make_option
 
 from . import InventoryCommand
@@ -402,7 +401,6 @@ ambiguous_media_types = {
 
 # Media types without an extension or with an extension for which there is already a media type.
 valid_media_types = frozenset([item for list in ambiguous_media_types.values() for item in list])
-
 
 
 format_corrections = {
@@ -859,9 +857,9 @@ ignore_media_types = frozenset([
     'xls en csv',
 
     # Other
-    'altro', # IT
-    'autre', # FR
-    'other', # EN
+    'altro',  # IT
+    'autre',  # FR
+    'other',  # EN
 
     # Programming language
     'ashx',  # ASP.NET
