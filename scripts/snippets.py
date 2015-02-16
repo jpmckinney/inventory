@@ -1,4 +1,4 @@
-# Catalog structure
+import csv
 
 from django.db.models import Count
 
@@ -7,6 +7,10 @@ from inventory.scrapers import catalogs
 
 datasets = Dataset.objects
 distributions = Distribution.objects
+
+
+
+# Catalog structure
 
 division_ids = set(distributions.values_list('division_id', flat=True))
 counts = datasets.values('division_id', 'id').annotate(count=Count('distribution'))
@@ -44,8 +48,30 @@ datasets.values('source_url').filter(division_id='ocd-division/country:us').anno
 
 # Metadata elements
 
-custom_properties = {}
-for catalog in catalogs:
-    l = Dataset.objects.filter(division_id=catalog.division_id).values_list('custom_properties', flat=True)
-    if any(l):
-        custom_properties[catalog.division_id] = set([item for sublist in l for item in sublist])
+def get_custom(qs, field):
+    custom = {}
+    for catalog in catalogs:
+        l = qs.filter(division_id=catalog.division_id).values_list(field, flat=True)
+        if any(l):
+            custom[catalog.division_id] = set([item for sublist in l for item in sublist])
+    return custom
+
+def write_custom(d, filename):
+    with open('{}.csv'.format(filename), 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['division_id', 'term'])
+        for key, values in d.items():
+            for value in values:
+                writer.writerow([key, value])
+
+dataset_properties = get_custom(datasets, 'custom_properties')
+dataset_extras = get_custom(datasets, 'extras_keys')
+
+distribution_properties = get_custom(distributions, 'custom_properties')
+distribution_extras = get_custom(distributions, 'extras_keys')
+
+write_custom(dataset_properties, 'dataset_properties')
+write_custom(dataset_extras, 'dataset_extras')
+
+write_custom(distribution_properties, 'distribution_properties')
+write_custom(distribution_extras, 'distribution_extras')

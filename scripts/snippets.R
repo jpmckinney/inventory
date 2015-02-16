@@ -1,11 +1,23 @@
-library(plyr)
-library(scales)
-
 library(ggplot2)
+library(plyr)
+library(reshape2)
 library(RPostgreSQL)
+library(scales)
 
 # @see https://code.google.com/p/rpostgresql/
 con <- dbConnect(dbDriver('PostgreSQL'), dbname='inventory')
+
+subnational <- c(
+  'ocd-division/country:ca/csd:2443027',
+  'ocd-division/country:ca/csd:2466023',
+  'ocd-division/country:ca/csd:3506008',
+  'ocd-division/country:ca/csd:4611040',
+  'ocd-division/country:ca/csd:4811052',
+  'ocd-division/country:ca/csd:4811061',
+  'ocd-division/country:ca/csd:5915001',
+  'ocd-division/country:ca/csd:5915004',
+  'ocd-division/country:ca/csd:5915007'
+)
 
 country_names <- function (l) {
   return(revalue(l, c(
@@ -18,7 +30,7 @@ country_names <- function (l) {
     'ocd-division/country:ee'='Estonia',
     'ocd-division/country:es'='Spain',
     'ocd-division/country:fi'='Finland',
-    # 'ocd-division/country:fr'='France',
+    'ocd-division/country:fr'='France',
     'ocd-division/country:gb'='United Kingdom',
     'ocd-division/country:gh'='Ghana',
     'ocd-division/country:gr'='Greece',
@@ -41,19 +53,22 @@ country_names <- function (l) {
 }
 
 
+
 # Catalog structure
 
 q <- "SELECT p.id, p.division_id, COUNT(*) from inventory_dataset p INNER JOIN inventory_distribution r ON r.dataset_id = p.id GROUP BY p.id"
 rows <- dbGetQuery(con, q)
 
-rows$division_id <- country_names(rows$division_id)
-rows$id <- NULL
-
 # Get the statistics.
 mean(rows$count)
 sd(rows$count)
 
+rows <- rows[!rows$division_id %in% subnational,]
+
 # Draw the boxplot.
+rows$division_id <- country_names(rows$division_id)
+rows$id <- NULL
+
 ggplot(data=rows, aes(x=division_id, y=count)) + geom_boxplot(outlier.size=0) + theme(
   axis.title=element_blank()
 ) + coord_flip(ylim=c(0, 21)) # hardcode
@@ -61,6 +76,8 @@ ggplot(data=rows, aes(x=division_id, y=count)) + geom_boxplot(outlier.size=0) + 
 
 
 # Metadata elements
+
+width <- 575
 
 fields <- list(
   c('title', "title != ''"),
@@ -79,11 +96,11 @@ fields <- list(
   c('accrualPeriodicity', "\"accrualPeriodicity\" != ''")
 )
 
+# Get the denominator.
 q <- "SELECT COUNT(*) FROM inventory_dataset"
 rows <- dbGetQuery(con, q)
 count <- rows$count
 rows$count <- NULL
-rows$id <- ''
 
 # Get the element usage.
 for (field in fields) {
@@ -91,23 +108,23 @@ for (field in fields) {
   rows[field[1]] <- dbGetQuery(con, q)$count / count
 }
 
-# Draw the bars.
+# Sort the data.
+rows$id <- ''
 m <- melt(rows, 'id')
 m <- transform(m, variable=reorder(variable, value))
-png('metadata.png', width=width, height=width * 1.5)
+
+# Draw the bars.
 ggplot(data=m, aes(x=variable, y=value)) + geom_bar(stat='identity', width=.75) + theme(
   axis.title=element_blank(),
   text=element_text(size=16)
 ) + scale_y_continuous(labels=percent) + coord_flip()
-dev.off()
 
+
+
+# Get the denominator.
 q <- "SELECT division_id, COUNT(*) FROM inventory_dataset GROUP BY division_id ORDER BY division_id"
 rows <- dbGetQuery(con, q)
-
-# Get the dataset counts.
-rows$division_id <- country_names(rows$division_id)
 count <- rows$count
-rows$count <- NULL
 
 # Get the element usage per catalog.
 for (field in fields) {
@@ -115,10 +132,15 @@ for (field in fields) {
   rows[field[1]] <- dbGetQuery(con, q)$count / count
 }
 
+rows <- rows[!rows$division_id %in% subnational,]
+rows$count <- NULL
+m <- melt(rows, 'division_id')
+
 # Draw the bars.
-width <- 575
+m$division_id <- country_names(m$division_id)
+
 png('metadata-catalogs.png', width=width, height=width * 1.5)
-ggplot(data=melt(rows, 'division_id'), aes(x=variable, y=value)) + geom_bar(stat='identity') + theme(
+ggplot(data=m, aes(x=variable, y=value)) + geom_bar(stat='identity') + theme(
   axis.text.x=element_text(angle=45, hjust=1),
   axis.title.x=element_blank(),
   axis.text.y=element_blank(),
@@ -127,3 +149,43 @@ ggplot(data=melt(rows, 'division_id'), aes(x=variable, y=value)) + geom_bar(stat
   strip.text.y=element_text(angle=0)
 ) + facet_grid(division_id ~ .)
 dev.off()
+
+
+
+# Licenses
+
+exclude <- c(
+  # Alpha.
+  'ocd-division/country:tz',
+
+  # No license metadata.
+  'ocd-division/country:cl',
+  'ocd-division/country:cr',
+  'ocd-division/country:gh'
+)
+
+# Get the denominator.
+q <- "SELECT division_id, COUNT(*) FROM inventory_dataset GROUP BY division_id ORDER BY division_id"
+rows <- dbGetQuery(con, q)
+count <- rows$count
+rows$count <- NULL
+
+# Get the unspecified and underspecified license usage per catalog.
+q <- "SELECT division_id, COUNT(case when license = '' OR license LIKE 'http://example.com/other%' OR license LIKE 'http://example.com/notspecified%' then 1 end) FROM inventory_dataset GROUP BY division_id ORDER BY division_id"
+rows$license <- dbGetQuery(con, q)$count / count
+
+m <- melt(rows, 'division_id')
+m <- m[!m$division_id %in% subnational,]
+m <- m[!m$division_id %in% exclude,]
+m <- m[m$value>0,]
+m <- transform(m, division_id=reorder(division_id, value))
+
+# Draw the bars.
+m$division_id <- country_names(m$division_id)
+m$variable <- NULL
+
+ggplot(data=m, aes(x=division_id, y=value)) + geom_bar(stat='identity') + theme(
+  axis.title=element_blank(),
+  text=element_text(size=16)
+) + scale_y_continuous(labels=percent) + coord_flip()
+
