@@ -134,10 +134,19 @@ class CKAN(Scraper):
 
         # "name" is always equal to "display_name", "vocabulary_id" is
         # either null or opaque, and "state" is always "active".
+        #
         # SELECT DISTINCT t FROM (SELECT json_array_elements(keyword)->>'vocabulary_id' t FROM inventory_dataset WHERE keyword::text <> '{}'::text) v WHERE t IS NOT NULL;
         # SELECT t FROM (SELECT json_array_elements(keyword)->>'state' t FROM inventory_dataset WHERE keyword::text <> '{}'::text) v WHERE t != 'active';
         # SELECT a, b FROM (SELECT json_array_elements(keyword)->>'name' a, json_array_elements(keyword)->>'display_name' b FROM inventory_dataset WHERE keyword::text <> '{}'::text) v WHERE a != b;
         dataset.keyword = [tag['name'] for tag in package.get('tags', [])]
+
+        dataset.language = oneof(package, 'language', 'original_language')
+        dataset.accrualPeriodicity = oneof(package, 'frekuensi_penerbitan', 'maintenance_and_update_frequency', 'update_freq', 'update_frequency')
+        dataset.spatial = oneof(package, 'cakupan', 'geographic_coverage', 'spatial', 'spatial_coverage', 'valid_spatial')
+        dataset.temporal = oneof(package, 'tahun', 'temporal_coverage', 'temporal_coverage-from', 'temporal_coverage-to', 'temporal_coverage_from', 'temporal_coverage_to', 'time_period_coverage_end', 'time_period_coverage_start', 'valid_from', 'valid_till', 'valid_until')
+        dataset.contactPoint = oneof(package, 'maintainer_email', 'author_email', 'contact-email', 'contact_point')
+        if package.get('theme-primary'):
+            dataset.theme = [package['theme-primary']]
 
         # Determine the license_id.
         license_id = package.get('license_id')
@@ -146,6 +155,8 @@ class CKAN(Scraper):
             match = next((value for value in extras.values() if value in licence_url_to_license_id), None)
             if match:
                 license_id = licence_url_to_license_id[match]
+            elif self.catalog.division_id == 'ocd-division/country:fi':
+                license_id = extras.get('licence_url')
             # @note GB ought to clean up its licensing.
             elif self.catalog.division_id == 'ocd-division/country:gb':
                 licence = extras.get('licence')
@@ -241,17 +252,18 @@ class CKAN(Scraper):
                     self.error('dataset.name is %d' % len(dataset.name))
                 if len(dataset.source_url) > 200:
                     self.error('dataset.source_url is %d' % len(dataset.source_url))
+                if len(dataset.contactPoint) > 254:
+                    self.error('dataset.contactPoint is %d' % len(dataset.contactPoint))
                 if len(dataset.landingPage) > 500:
                     self.error('dataset.landingPage is %d' % len(dataset.landingPage))
                 if len(dataset.license_url) > 200:
                     self.error('dataset.license_url is %d' % len(dataset.license_url))
-                if len(dataset.maintainer_email) > 254:
-                    self.error('dataset.maintainer_email is %d' % len(dataset.maintainer_email))
-                if len(dataset.author_email) > 254:
-                    self.error('dataset.author_email is %d' % len(dataset.author_email))
         except KeyError as e:
             self.error('%s missing key %s' % (source_url, e))
 
+
+def oneof(d, *keys):
+    return next((str(d.get(key)) for key in keys if d.get(key)), '')
 
 # Core CKAN fields.
 ckan_dataset_properties = frozenset([
@@ -261,14 +273,12 @@ ckan_dataset_properties = frozenset([
     # package_dictize... It's easier to just look at the CKAN API output.
 
     # Modeled
-    'author',
     'author_email',
     'id',
     'isopen',
     'license_id',
     'license_title',
     'license_url',
-    'maintainer',
     'maintainer_email',
     'metadata_created',
     'metadata_modified',
@@ -280,10 +290,49 @@ ckan_dataset_properties = frozenset([
     'type',
     'url',
 
+    # dct:language
+    'language',  # AU, CA
+    'original_language',  # FI
+
+    # dct:accrualPeriodicity
+    'frekuensi_penerbitan',  # ID
+    'maintenance_and_update_frequency',  # CA
+    'update_freq',  # AU
+    'update_frequency',  # EE, FI, GB, PY, UY
+
+    # dct:spatial
+    'cakupan',  # ID
+    'geographic_coverage',  # GB
+    'spatial',  # AU, CA
+    'spatial_coverage',  # AU, UY
+    'valid_spatial',  # PY
+
+    # dct:temporal
+    'tahun',  # ID
+    'temporal_coverage',  # UY
+    'temporal_coverage-from',  # GB
+    'temporal_coverage-to',  # GB
+    'temporal_coverage_from',  # AU
+    'temporal_coverage_to',  # AU
+    'time_period_coverage_end',  # CA
+    'time_period_coverage_start',  # CA
+    'valid_from',  # FI, PY
+    'valid_till',  # FI
+    'valid_until',  # PY
+
+    # dcat:contactPoint
+    'contact_point',  # AU
+    'contact-email',  # EE, GB
+
+    # dcat:theme
+    'theme-primary',  # EE, GB
+
     # Not modeled
+    'author',
     'creator_user_id',
     'extras',
     'groups',
+    'maintainer',
     'num_resources',
     'num_tags',
     'organization',
@@ -296,6 +345,55 @@ ckan_dataset_properties = frozenset([
     'state',
     'tracking_summary',
     'version',
+
+    # @see https://github.com/ckan/ckanext-harvest
+    'harvest_object_id',
+    'harvest_source_id',
+    'harvest_source_title',
+
+    # dct:temporal
+    'temporal_granularity',  # FI, GB
+    'temporal_granularity-other',  # GB
+    'geographic_granularity',  # GB
+    'geographic_granularity-other',  # GB
+
+    # Boolean
+    'core-dataset',  # EE, GB
+    'ready_to_publish',  # CA
+    'unpublished',  # EE, GB
+
+    # Translations
+    # CA
+    'attribution_fra',
+    'data_series_issue_identification_fra',
+    'data_series_name_fra',
+    'endpoint_url_fra',
+    'keywords_fra',
+    'license_title_fra',
+    'license_url_fra',
+    'notes_fra',
+    'title_fra',
+    'url_fra',
+    # FI
+    'copyright_notice_sv',
+    'notes_sv',
+    'title_sv',
+    # TZ
+    'title_sw',
+    'description_sw',
+
+    # AU
+    'data_state',  # "active"
+
+    # EE, GB
+    'theme-secondary',  # dct:theme
+    'contact-name',  # vcard:fn
+    'contact-phone',  # vcard:hasTelephone
+    'data_dict',  # JSON as string
+    'update_frequency-other'  # set if `update_frequency` is "other"
+    'additional_resources',  # resource partition
+    'individual_resources',  # resource partition
+    'timeseries_resources',  # resource partition
 ])
 ckan_distribution_properties = frozenset([
     # Modeled
@@ -334,19 +432,8 @@ dataset_properties = {
     'metadata_modified': 'modified',
     'owner_org': 'publisher',
     'id': 'identifier',
-    'maintainer': 'maintainer',  # dcat:contactPoint vcard:fn
-    'maintainer_email': 'maintainer_email',  # dcat:contactPoint vcard:hasEmail
-    'author': 'author',  # dcat:contactPoint vcard:fn
-    'author_email': 'author_email',  # dcat:contactPoint vcard:hasEmail
     'url': 'landingPage',
     'type': 'type',
-
-    # CKAN doesn't have:
-    # * dct:language
-    # * dct:accrualPeriodicity
-    # * dct:spatial
-    # * dct:temporal
-    # * dcat:theme
 }
 distribution_properties = {
     'name': 'title',
