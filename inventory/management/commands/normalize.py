@@ -29,134 +29,140 @@ class Command(InventoryCommand):
             criteria = {}
 
         if options['media_types']:
-            self.info('Normalizing media types...')
-            kwargs = criteria.copy()
-            kwargs['mediaType'] = ''
-            qs = Distribution.objects.filter(**kwargs)
-
-            for media_type, extension in types:
-                if not mimetypes.types_map.get(extension):
-                    mimetypes.add_type(media_type, extension)
-
-            self.warnings = {}
-            self.warnings_count = 0
-
-            # @todo mimetype_inner (br, uy, it): Distribution.objects.exclude(mimetype_inner='').count()
-            for distribution in qs:
-                self.save = True
-
-                guesses = {
-                    'mimetype': '',
-                    'format': '',
-                    'accessURL': '',
-                }
-
-                # Make the guesses.
-                if distribution.mimetype:
-                    guesses['mimetype'] = self.guess_type(distribution.mimetype)
-                if distribution.format:
-                    guesses['format'] = self.guess_type(distribution.format)
-                if distribution.accessURL:
-                    guess = mimetypes.guess_type(distribution.accessURL)
-                    if guess[1] == 'gzip' and (guesses['mimetype'] and guesses['mimetype'] != guess[0] or guesses['format'] and guesses['format'] != guess[0]):
-                        guesses['accessURL'] = 'application/gzip'
-                    else:
-                        guesses['accessURL'] = guess[0] or ''
-
-                # Eliminate non-media types.
-                for field, media_type in guesses.items():
-                    if not media_type or self.ignore_type(media_type):
-                        guesses[field] = ''
-
-                # Eliminate empty media types.
-                media_types = list(filter(None, guesses.values()))
-
-                # Media types guessed from extensions, e.g. "application/xml",
-                # can be less specific than e.g. "application/rdf+xml".
-                specific_media_type = None
-                for ambiguous_media_type, specific_media_types in ambiguous_media_types.items():
-                    # If the media types include an ambiguous media type and a
-                    # specific media type, eliminate the ambigious media type.
-                    if ambiguous_media_type in media_types:
-                        specific_media_type = next((media_type for media_type in media_types if media_type in specific_media_types), None)
-                        if specific_media_type:
-                            media_types = [media_type for media_type in media_types if media_type != ambiguous_media_type]
-                            break
-
-                # Test if the guesses agree with each other.
-                if specific_media_type:
-                    if len(set(media_types)) > 1:
-                        self.bad_guess('Multiple specific media types', guesses, distribution)
-                elif guesses['accessURL']:
-                    # @todo Do HEAD requests, as sometimes the file extension
-                    # is misleading, e.g. .xml redirects to .html in GB. Note
-                    # that even when the metadata is consistent, the media type
-                    # could be incorrect.
-                    if guesses['mimetype'] and guesses['accessURL'] != guesses['mimetype']:
-                        self.bad_guess('Conflict', guesses, distribution)
-                    elif guesses['format'] and guesses['accessURL'] != guesses['format']:
-                        self.bad_guess('Conflict', guesses, distribution)
-                elif guesses['mimetype'] and guesses['format'] and guesses['mimetype'] != guesses['format']:
-                    self.bad_guess('Conflict', guesses, distribution)
-
-                # Test that we recognize the media types.
-                for media_type in media_types:
-                    if media_type and not self.valid_type(media_type):
-                        self.bad_guess('Unrecognized', guesses, distribution)
-
-                # If a unique media type is recognized.
-                if self.save and len(set(media_types)) == 1:
-                    distribution.mediaType = media_types[0]
-                    distribution.save()
-
-            for key, (sample, count) in sorted(self.warnings.items(), key=lambda warning: warning[1][1]):
-                message, guesses = list(key)
-                guesses = dict(guesses)
-
-                print('{:5} {}'.format(count, message))
-                for field in ('mimetype', 'format', 'accessURL'):
-                    value = getattr(sample, field)
-                    if value:
-                        if field == 'accessURL' and len(value) > 120:
-                            value = '{}..{}'.format(value[:59], value[-59:])
-                        # e.g. "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                        print('  {:9} {:73} {}'.format(field, guesses[field], value))
-                print()
-
-            print('Warnings: {}/{} ({} unique)'.format(self.warnings_count, qs.count(), len(self.warnings)))
+            self.media_types(criteria)
 
         if options['licenses']:
-            self.info('Normalizing licenses...')
-            kwargs = criteria.copy()
-            kwargs['license'] = ''
-            qs = Dataset.objects.filter(**kwargs)
+            self.licenses(criteria)
 
-            # MD http://data.gov.md/ro/termeni-si-conditii
-            # MD doesn't take advantage of CKAN's per-dataset licensing.
-            # qs = Dataset.objects.filter(division_id='ocd-division/country:md'); qs.filter(license_id='notspecified').count() / qs.count()
-            qs.filter(division_id='ocd-division/country:md', license_id='notspecified').update(license='http://data.gov.md/en/terms-and-conditions')
-            # MX displays "Libro Uso MX" for all datasets.
-            # cc-by http://catalogo.datos.gob.mx/dataset/mexico-prospero-estadisticas-nacionales
-            # notspecified http://catalogo.datos.gob.mx/dataset/niveles-actuales-de-rios
-            qs.filter(division_id='ocd-division/country:mx', license_id__in=('cc-by', 'notspecified', '')).update(license='http://datos.gob.mx/libreusomx/')
+    def media_types(self, criteria):
+        self.info('Normalizing media types...')
+        kwargs = criteria.copy()
+        kwargs['mediaType'] = ''
+        qs = Distribution.objects.filter(**kwargs)
 
-            # ID http://data.id/lisensi-dan-atribusi.html
-            qs.filter(division_id='ocd-division/country:id', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/4.0/')
-            # IT http://www.dati.gov.it/content/note-legali
-            qs.filter(division_id='ocd-division/country:it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
-            # KE "When a dataset publication permissions is marked as 'public', CC-0 is what we mean."
-            qs.filter(division_id='ocd-division/country:ke', license_id='Public Domain').update(license='http://creativecommons.org/publicdomain/zero/1.0/')
+        for media_type, extension in types:
+            if not mimetypes.types_map.get(extension):
+                mimetypes.add_type(media_type, extension)
 
-            # UK and RO use the same license ID for different licenses.
-            qs.filter(division_id='ocd-division/country:gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/')
-            qs.filter(division_id='ocd-division/country:ro', license_id='uk-ogl').update(license='http://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf')
+        self.warnings = {}
+        self.warnings_count = 0
 
-            for license_id, license in license_ids.items():
-                qs.filter(license_id=license_id).update(license=license)
-            for license_url, license in license_urls.items():
-                qs.filter(license_url=license_url).update(license=license)
-            for license_title, license in license_titles.items():
-                qs.filter(license_title=license_title).update(license=license)
+        # @todo mimetype_inner (br, uy, it): Distribution.objects.exclude(mimetype_inner='').count()
+        for distribution in qs:
+            self.save = True
+
+            guesses = {
+                'mimetype': '',
+                'format': '',
+                'accessURL': '',
+            }
+
+            # Make the guesses.
+            if distribution.mimetype:
+                guesses['mimetype'] = self.guess_type(distribution.mimetype)
+            if distribution.format:
+                guesses['format'] = self.guess_type(distribution.format)
+            if distribution.accessURL:
+                guess = mimetypes.guess_type(distribution.accessURL)
+                if guess[1] == 'gzip' and (guesses['mimetype'] and guesses['mimetype'] != guess[0] or guesses['format'] and guesses['format'] != guess[0]):
+                    guesses['accessURL'] = 'application/gzip'
+                else:
+                    guesses['accessURL'] = guess[0] or ''
+
+            # Eliminate non-media types.
+            for field, media_type in guesses.items():
+                if not media_type or self.ignore_type(media_type):
+                    guesses[field] = ''
+
+            # Eliminate empty media types.
+            media_types = list(filter(None, guesses.values()))
+
+            # Media types guessed from extensions, e.g. "application/xml",
+            # can be less specific than e.g. "application/rdf+xml".
+            specific_media_type = None
+            for ambiguous_media_type, specific_media_types in ambiguous_media_types.items():
+                # If the media types include an ambiguous media type and a
+                # specific media type, eliminate the ambigious media type.
+                if ambiguous_media_type in media_types:
+                    specific_media_type = next((media_type for media_type in media_types if media_type in specific_media_types), None)
+                    if specific_media_type:
+                        media_types = [media_type for media_type in media_types if media_type != ambiguous_media_type]
+                        break
+
+            # Test if the guesses agree with each other.
+            if specific_media_type:
+                if len(set(media_types)) > 1:
+                    self.bad_guess('Multiple specific media types', guesses, distribution)
+            elif guesses['accessURL']:
+                # @todo Do HEAD requests, as sometimes the file extension
+                # is misleading, e.g. .xml redirects to .html in GB. Note
+                # that even when the metadata is consistent, the media type
+                # could be incorrect.
+                if guesses['mimetype'] and guesses['accessURL'] != guesses['mimetype']:
+                    self.bad_guess('Conflict', guesses, distribution)
+                elif guesses['format'] and guesses['accessURL'] != guesses['format']:
+                    self.bad_guess('Conflict', guesses, distribution)
+            elif guesses['mimetype'] and guesses['format'] and guesses['mimetype'] != guesses['format']:
+                self.bad_guess('Conflict', guesses, distribution)
+
+            # Test that we recognize the media types.
+            for media_type in media_types:
+                if media_type and not self.valid_type(media_type):
+                    self.bad_guess('Unrecognized', guesses, distribution)
+
+            # If a unique media type is recognized.
+            if self.save and len(set(media_types)) == 1:
+                distribution.mediaType = media_types[0]
+                distribution.save()
+
+        for key, (sample, count) in sorted(self.warnings.items(), key=lambda warning: warning[1][1]):
+            message, guesses = list(key)
+            guesses = dict(guesses)
+
+            print('{:5} {}'.format(count, message))
+            for field in ('mimetype', 'format', 'accessURL'):
+                value = getattr(sample, field)
+                if value:
+                    if field == 'accessURL' and len(value) > 120:
+                        value = '{}..{}'.format(value[:59], value[-59:])
+                    # e.g. "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                    print('  {:9} {:73} {}'.format(field, guesses[field], value))
+            print()
+
+        print('Warnings: {}/{} ({} unique)'.format(self.warnings_count, qs.count(), len(self.warnings)))
+
+    def licenses(self, criteria):
+        self.info('Normalizing licenses...')
+        kwargs = criteria.copy()
+        kwargs['license'] = ''
+        qs = Dataset.objects.filter(**kwargs)
+
+        # MD http://data.gov.md/ro/termeni-si-conditii
+        # MD doesn't take advantage of CKAN's per-dataset licensing.
+        # qs = Dataset.objects.filter(division_id='ocd-division/country:md'); qs.filter(license_id='notspecified').count() / qs.count()
+        qs.filter(division_id='ocd-division/country:md', license_id='notspecified').update(license='http://data.gov.md/en/terms-and-conditions')
+        # MX displays "Libro Uso MX" for all datasets.
+        # cc-by http://catalogo.datos.gob.mx/dataset/mexico-prospero-estadisticas-nacionales
+        # notspecified http://catalogo.datos.gob.mx/dataset/niveles-actuales-de-rios
+        qs.filter(division_id='ocd-division/country:mx', license_id__in=('cc-by', 'notspecified', '')).update(license='http://datos.gob.mx/libreusomx/')
+
+        # ID http://data.id/lisensi-dan-atribusi.html
+        qs.filter(division_id='ocd-division/country:id', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/4.0/')
+        # IT http://www.dati.gov.it/content/note-legali
+        qs.filter(division_id='ocd-division/country:it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
+        # KE "When a dataset publication permissions is marked as 'public', CC-0 is what we mean."
+        qs.filter(division_id='ocd-division/country:ke', license_id='Public Domain').update(license='http://creativecommons.org/publicdomain/zero/1.0/')
+
+        # UK and RO use the same license ID for different licenses.
+        qs.filter(division_id='ocd-division/country:gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/')
+        qs.filter(division_id='ocd-division/country:ro', license_id='uk-ogl').update(license='http://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf')
+
+        for license_id, license in license_ids.items():
+            qs.filter(license_id=license_id).update(license=license)
+        for license_url, license in license_urls.items():
+            qs.filter(license_url=license_url).update(license=license)
+        for license_title, license in license_titles.items():
+            qs.filter(license_title=license_title).update(license=license)
 
     def guess_type(self, value):
         value = re.sub('\A\.', '', ' '.join(value.lower().split()))  # Normalize case and spaces and remove period from extension.
