@@ -3,6 +3,7 @@
 from django.db.models import Count
 
 from inventory.models import Dataset, Distribution
+from inventory.scrapers import catalogs
 
 datasets = Dataset.objects
 distributions = Distribution.objects
@@ -38,3 +39,13 @@ datasets.values('source_url').filter(division_id='ocd-division/country:ie').anno
 datasets.values('source_url').filter(division_id='ocd-division/country:ph').annotate(count=Count('distribution')).filter(count=0)
 
 datasets.values('source_url').filter(division_id='ocd-division/country:us').annotate(count=Count('distribution')).filter(count=0, landingPage='').exclude(extras_keys__contains=['landingPage'])
+
+
+
+# Metadata elements
+
+custom_properties = {}
+for catalog in catalogs:
+    l = Dataset.objects.filter(division_id=catalog.division_id).values_list('custom_properties', flat=True)
+    if any(l):
+        custom_properties[catalog.division_id] = set([item for sublist in l for item in sublist])
