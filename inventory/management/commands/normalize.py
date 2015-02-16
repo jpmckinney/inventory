@@ -28,11 +28,11 @@ class Command(InventoryCommand):
         else:
             criteria = {}
 
-        if options['media_types']:
-            self.media_types(criteria)
-
         if options['licenses']:
             self.licenses(criteria)
+
+        if options['media_types']:
+            self.media_types(criteria)
 
     def media_types(self, criteria):
         self.info('Normalizing media types...')
@@ -150,8 +150,6 @@ class Command(InventoryCommand):
         qs.filter(division_id='ocd-division/country:id', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/4.0/')
         # IT http://www.dati.gov.it/content/note-legali
         qs.filter(division_id='ocd-division/country:it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
-        # KE "When a dataset publication permissions is marked as 'public', CC-0 is what we mean."
-        qs.filter(division_id='ocd-division/country:ke', license_id='Public Domain').update(license='http://creativecommons.org/publicdomain/zero/1.0/')
 
         # UK and RO use the same license ID for different licenses.
         qs.filter(division_id='ocd-division/country:gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/')
@@ -180,11 +178,11 @@ class Command(InventoryCommand):
     def bad_guess(self, message, guesses, sample):
         self.save = False
         key = (message, tuple(guesses.items()))
-        if not self.warnings.get(key):
-            self.warnings[key] = [sample, 1]
-        else:
+        if self.warnings.get(key):
             value = self.warnings[key]
             self.warnings[key] = [value[0], value[1] + 1]
+        else:
+            self.warnings[key] = [sample, 1]
         self.warnings_count += 1
 
 
@@ -202,6 +200,7 @@ license_ids = {
     'OKD Compliant::Creative Commons CCZero':      'http://creativecommons.org/publicdomain/zero/1.0/',
     'creative-commons-attribution-cc-by-':         'http://creativecommons.org/licenses/by/3.0/nl/',
     'naamsvermelding---gelijkdelen-cc-by-sa-':     'http://creativecommons.org/licenses/by-sa/3.0/nl/',
+    'http://creativecommons.org/publicdomain/zero/1.0/legalcode': 'http://creativecommons.org/publicdomain/zero/1.0/',
     'Creative Commons 1.0 Universal (http://creativecommons.org/publicdomain/zero/1.0/legalcode)': 'http://creativecommons.org/publicdomain/zero/1.0/',
     # GR http://data.gov.gr/terms/
     'OKD Compliant::Creative Commons Attribution': 'http://creativecommons.org/licenses/by/3.0/gr/',
