@@ -150,6 +150,9 @@ class Command(InventoryCommand):
         qs.filter(division_id='ocd-division/country:id', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/4.0/')
         # IT http://www.dati.gov.it/content/note-legali
         qs.filter(division_id='ocd-division/country:it', license_id='cc-by').update(license='http://creativecommons.org/licenses/by/3.0/it/')
+        # KE "When a dataset publication permissions is marked as 'public', CC-0 is what we mean."
+        # Datasets without a license in data.json are listed as "Public Domain" on the web.
+        qs.filter(division_id='ocd-division/country:ke', license_id='').update(license='http://creativecommons.org/publicdomain/zero/1.0/')
 
         # UK and RO use the same license ID for different licenses.
         qs.filter(division_id='ocd-division/country:gb', license_id='uk-ogl').update(license='http://www.nationalarchives.gov.uk/doc/open-government-licence/')
@@ -193,6 +196,7 @@ license_ids = {
     # Creative Commons
     'cc-by-4':                                     'http://creativecommons.org/licenses/by/4.0/',
     'cc-by-4.0':                                   'http://creativecommons.org/licenses/by/4.0/',
+    'cc-by-4-fi':                                  'http://creativecommons.org/licenses/by/4.0/',
     'cc-by-sa-1-fi':                               'http://creativecommons.org/licenses/by-sa/1.0/fi/',
     'cc-zero':                                     'http://creativecommons.org/publicdomain/zero/1.0/',
     'cc-zero-1.0':                                 'http://creativecommons.org/publicdomain/zero/1.0/',
@@ -200,6 +204,9 @@ license_ids = {
     'OKD Compliant::Creative Commons CCZero':      'http://creativecommons.org/publicdomain/zero/1.0/',
     'creative-commons-attribution-cc-by-':         'http://creativecommons.org/licenses/by/3.0/nl/',
     'naamsvermelding---gelijkdelen-cc-by-sa-':     'http://creativecommons.org/licenses/by-sa/3.0/nl/',
+    'http://creativecommons.org/licenses/by/3.0/legalcode': 'http://creativecommons.org/licenses/by/3.0/',
+    'http://creativecommons.org/licenses/by-nd/3.0/legalcode': 'http://creativecommons.org/licenses/by-nd/3.0/',
+    'http://creativecommons.org/licenses/by-sa/3.0/legalcode': 'http://creativecommons.org/licenses/by-nd/3.0/',
     'http://creativecommons.org/publicdomain/zero/1.0/legalcode': 'http://creativecommons.org/publicdomain/zero/1.0/',
     'Creative Commons 1.0 Universal (http://creativecommons.org/publicdomain/zero/1.0/legalcode)': 'http://creativecommons.org/publicdomain/zero/1.0/',
     # GR http://data.gov.gr/terms/
@@ -214,10 +221,18 @@ license_ids = {
     'odc-by':   'http://opendatacommons.org/licenses/by/1.0/',
     'odc-odbl': 'http://opendatacommons.org/licenses/odbl/1.0/',
     'odc-pddl': 'http://opendatacommons.org/licenses/pddl/1.0/',
+    'http://opendatacommons.org/licenses/pddl/1.0/': 'http://opendatacommons.org/licenses/pddl/1.0/',
 
     # CA
     'ca-ogl-lgo': 'http://data.gc.ca/eng/open-government-licence-canada',
     'ca-odla-aldg': 'http://ocl-cal.gc.ca/eic/site/012.nsf/eng/00873.html',
+    # CA-BC
+    'OGL-BC': 'http://www.data.gov.bc.ca/local/dbc/docs/license/OGL-vbc2.0.pdf',
+    'OGL-Surrey': 'http://data.surrey.ca/pages/open-government-licence-surrey',
+    # CA-ON
+    'ottawa': 'http://ottawa.ca/en/open-data-terms-use',
+    # CA-QC
+    'vdm': 'http://creativecommons.org/licenses/by/4.0/',
     # GB
     'CEH Open Government Licence': 'http://eidchub.ceh.ac.uk/administration-folder/tools/ceh-standard-licence-texts/ceh-open-government-licence',
     'Natural England-OS Open Government Licence': 'http://webarchive.nationalarchives.gov.uk/20140605090108/http://www.naturalengland.org.uk/copyright/default.aspx',
@@ -234,13 +249,21 @@ license_ids = {
     # FI
     'helsinkikanava-opendata-tos': 'http://open.helsinkikanava.fi/tos.html',
     'hri-tietoaineistot-lisenssi-nimea': 'http://www.hri.fi/lisenssit/hri-nimea/',
+    'http://kartta.kokkola.fi/TeklaOGCWeb/wms.ashx': 'http://kartta.kokkola.fi/TeklaOGCWeb/wms.ashx',
+    'http://kartta.metla.fi/MVMI-Lisenssi.pdf': 'http://kartta.metla.fi/MVMI-Lisenssi.pdf',
     'http://teto.tampere.fi/lisenssit/tre_avoimen_datan_lisenssi.pdf': 'http://teto.tampere.fi/lisenssit/tre_avoimen_datan_lisenssi.pdf',
+    'http://tilastokeskus.fi/org/lainsaadanto/yleiset_kayttoehdot.html': 'http://tilastokeskus.fi/org/lainsaadanto/yleiset_kayttoehdot.html',
+    'http://tilastokeskus.fi/org/lainsaadanto/yleiset_kayttoehdot.html ]': 'http://tilastokeskus.fi/org/lainsaadanto/yleiset_kayttoehdot.html ]',
+    'http://tilastokeskus.fi/org/lainsaadanto/copyright_sv.html': 'http://tilastokeskus.fi/org/lainsaadanto/copyright.html',
+    'http://tilastokeskus.fi/org/lainsaadanto/copyright.html': 'http://tilastokeskus.fi/org/lainsaadanto/copyright.html',
     'http://www.maanmittauslaitos.fi/aineistot-palvelut/rajapintapalvelut/karttakuvapalvelu-wms': 'http://www.maanmittauslaitos.fi/aineistot-palvelut/rajapintapalvelut/karttakuvapalvelu-wms',
     'http://www.maanmittauslaitos.fi/aineistot-palvelut/rajapintapalvelut/karttakuvapalvelu-wms,': 'http://www.maanmittauslaitos.fi/aineistot-palvelut/rajapintapalvelut/karttakuvapalvelu-wms',
     'http://www.maanmittauslaitos.fi/aineistot-palvelut/verkkopalvelut/kiinteistotietopalvelu': 'http://www.maanmittauslaitos.fi/aineistot-palvelut/verkkopalvelut/kiinteistotietopalvelu',
     'http://www.maanmittauslaitos.fi/avoindata_lisenssi_versio1_20120501': 'http://www.maanmittauslaitos.fi/avoindata_lisenssi_versio1_20120501',
-    'http://www.maanmittauslaitos.fi/node/300': 'http://www.maanmittauslaitos.fi/laserkeilausindeksit',
     'http://www.maanmittauslaitos.fi/kartat/ilmakuvat/ilma-ortokuvien-indeksikartat': 'http://www.maanmittauslaitos.fi/kartat/ilmakuvat/ilma-ortokuvien-indeksikartat',
+    'http://www.maanmittauslaitos.fi/maanmittauslaitoksen-avoimen-tietoaineiston-cc-40-lisenssi': 'http://www.maanmittauslaitos.fi/maanmittauslaitoksen-avoimen-tietoaineiston-cc-40-lisenssi',
+    'http://www.maanmittauslaitos.fi/node/300': 'http://www.maanmittauslaitos.fi/laserkeilausindeksit',
+    'https://www.jyu.fi/sport/laitokset/liikunta/liikuntapaikat/rajapinnat': 'https://www.jyu.fi/sport/laitokset/liikunta/liikuntapaikat/rajapinnat',
     'ilmoitettumuualla': 'http://www.hri.fi/lisenssit',
     'kmo-aluejakorajat': 'http://www.hri.fi/lisenssit/kmo-aluejakorajat/',
     # UY https://catalogodatos.gub.uy/
@@ -250,6 +273,7 @@ license_ids = {
     'No license provided': 'http://example.com/notspecified',
     'notspec':             'http://example.com/notspecified',
     'notspecified':        'http://example.com/notspecified',
+    'other':               'http://example.com/other',
     'other-at':            'http://example.com/other-at',
     'other-closed':        'http://example.com/other-closed',
     'other-nc':            'http://example.com/other-nc',
