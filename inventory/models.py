@@ -9,6 +9,8 @@ class Dataset(models.Model):  # dcat:Dataset
     name = models.CharField(max_length=500)  # @see https://github.com/ckan/ckan/blob/525fd7d4c6d9987504d2d20c383b83382cefcab3/ckan/model/package.py#L29
     json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     # Additional fields
     source_url = models.URLField(unique=True, max_length=500)
@@ -25,6 +27,7 @@ class Dataset(models.Model):  # dcat:Dataset
     accrualPeriodicity = models.TextField(default='')  # dct
     identifier = models.TextField(default='')  # dct (not always a UUID)
     spatial = models.TextField(default='')  # dct
+    temporal = models.TextField(default='')  # dct
     theme = ArrayField(dbtype='text')  # dcat
     keyword = ArrayField(dbtype='text')  # dcat
     contactPoint = models.TextField(default='')  # dcat
@@ -32,10 +35,6 @@ class Dataset(models.Model):  # dcat:Dataset
 
     # CKAN
     type = models.TextField(default='')
-    maintainer = models.TextField(default='')
-    maintainer_email = models.EmailField(default='')
-    author = models.TextField(default='')
-    author_email = models.EmailField(default='')
 
     # @see http://project-open-data.github.io/v1.1/schema/#accessLevel
     accessLevel = models.TextField(default='')
@@ -64,6 +63,8 @@ class Distribution(models.Model):  # dcat:Distribution
     _id = models.TextField(default='')  # (not always a UUID)
     json = JSONField(default={})
     custom_properties = ArrayField(dbtype='text')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     # Additional fields
     division_id = models.CharField(max_length=150, db_index=True)
