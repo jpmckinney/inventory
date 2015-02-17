@@ -65,6 +65,12 @@ class RDF(Scraper):
                     values = self.get_values(resource, distribution_property)
                     if values:
                         setattr(distribution, column_name, values[0])
+                elif column_name in ('format', 'mimetype'):
+                    values = self.xpath(resource, distribution_property)
+                    if len(values) == 1:
+                        setattr(distribution, column_name, values[0])
+                    elif len(values) > 1:
+                        raise Exception('expected zero or one %s' % (distribution_property))
                 else:
                     value = self.get_value(resource, distribution_property)
                     if value is not None:
@@ -78,6 +84,7 @@ class RDF(Scraper):
             'dcat': 'http://www.w3.org/ns/dcat#',
             'dct': 'http://purl.org/dc/terms/',
             'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+            'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
         })
 
     def get_values(self, node, path):
@@ -155,7 +162,8 @@ distribution_properties = {
     './dct:license': 'license',
     './dcat:accessURL': 'accessURL',
     './dcat:byteSize': 'byteSize',
-    './dct:format': 'format',
+    './dct:format//@rdfs:label': 'format',
+    './dct:format//@rdf:value': 'mimetype',
     # dct:relation "+info" (text, url)
 }
 

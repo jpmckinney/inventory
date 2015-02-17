@@ -86,5 +86,5 @@ dataset_properties = {
 }
 distribution_properties = {
     'downloadURL': 'accessURL',
-    'mediaType': 'mediaType',
+    'mediaType': 'mimetype',
 }
