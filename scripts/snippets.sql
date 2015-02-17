@@ -29,6 +29,19 @@ SELECT division_id, license_id
   GROUP BY division_id, license_id
   ORDER BY license_id;
 
+SELECT division_id, license_title
+  FROM inventory_dataset
+  WHERE license_title IN (
+    -- AU
+    'cc-by-sa',
+    -- EE
+    'Creative Commons BY 3.0',
+    -- NL
+    'cc-by'
+  )
+  GROUP BY division_id, license_title
+  ORDER BY license_title;
+
 
 
 -- List the most common license per country.
@@ -89,7 +102,6 @@ SELECT o.division_id, o.license
 
 
 
-
 -- Investigate NL distributions without accessURL.
 SELECT COUNT(*)
   FROM inventory_dataset
@@ -117,3 +129,61 @@ SELECT d.name, COUNT(*) c
     AND "landingPage" NOT LIKE '%nationaalgeoregister.nl/geonetwork%'
   GROUP BY d.name
   ORDER BY c;
+
+
+
+-- Explore metadata values, to see if any structure or vocabulary is used.
+
+-- ISO 639?
+SELECT division_id, COUNT(*), language
+  FROM inventory_dataset
+  WHERE language != ''
+  GROUP BY division_id, language
+  ORDER BY division_id, language;
+-- ISO 8601?
+SELECT division_id, COUNT(*), temporal
+  FROM inventory_dataset
+  WHERE temporal != ''
+  GROUP BY division_id, temporal
+  ORDER BY division_id, temporal;
+
+-- Structure?
+SELECT division_id, COUNT(*), spatial
+  FROM inventory_dataset
+  WHERE spatial != ''
+  GROUP BY division_id, spatial
+  ORDER BY division_id, spatial;
+SELECT division_id, COUNT(*), "contactPoint"
+  FROM inventory_dataset
+  WHERE "contactPoint" != ''
+  GROUP BY division_id, "contactPoint"
+  ORDER BY division_id, "contactPoint";
+
+-- Vocabulary?
+SELECT division_id, COUNT(*), "accrualPeriodicity"
+  FROM inventory_dataset
+  WHERE "accrualPeriodicity" != ''
+  GROUP BY division_id, "accrualPeriodicity"
+  ORDER BY division_id, "accrualPeriodicity";
+SELECT division_id, COUNT(*), publisher
+  FROM inventory_dataset
+  WHERE publisher != ''
+  GROUP BY division_id, publisher
+  ORDER BY division_id, publisher;
+SELECT division_id, COUNT(*), theme
+  FROM inventory_dataset
+  WHERE theme != '{}'
+  GROUP BY division_id, theme
+  ORDER BY division_id, theme;
+SELECT division_id, COUNT(*), keyword
+  FROM inventory_dataset
+  WHERE keyword != '{}'
+  GROUP BY division_id, keyword
+  ORDER BY division_id, keyword;
+
+-- Scheme?
+SELECT division_id, COUNT(*), identifier
+  FROM inventory_dataset
+  WHERE identifier != ''
+  GROUP BY division_id, identifier
+  ORDER BY division_id, identifier;

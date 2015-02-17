@@ -273,14 +273,14 @@ license_ids = {
     'odc-uy': 'http://datos.gub.uy/wps/wcm/connect/856cc1804db0463baa8bea01b72d8394/terminos-catalogodatos.pdf?MOD=AJPERES&ContentCache=NONE&CACHEID=856cc1804db0463baa8bea01b72d8394',
 
     # Generic
-    'other':               'http://example.com/other',
+    'other': 'http://example.com/other',
     # https://github.com/ckan/ckan/blob/master/ckan/model/license.py
-    'notspecified':        'http://example.com/notspecified',
-    'other-at':            'http://example.com/other-at',
-    'other-closed':        'http://example.com/other-closed',
-    'other-nc':            'http://example.com/other-nc',
-    'other-open':          'http://example.com/other-open',
-    'other-pd':            'http://example.com/other-pd',
+    'notspecified': 'http://example.com/notspecified',
+    'other-at':     'http://example.com/other-at',
+    'other-closed': 'http://example.com/other-closed',
+    'other-nc':     'http://example.com/other-nc',
+    'other-open':   'http://example.com/other-open',
+    'other-pd':     'http://example.com/other-pd',
 }
 license_urls = {
     # Identical
@@ -289,21 +289,23 @@ license_urls = {
     'http://creativecommons.org/licenses/by-nc-nd/':   'http://creativecommons.org/licenses/by-nc-nd/',
     'http://creativecommons.org/licenses/by-nc-sa':    'http://creativecommons.org/licenses/by-nc-sa/',
     'http://creativecommons.org/licenses/by-nd/':      'http://creativecommons.org/licenses/by-nd/',
+
     # Correction
     'http://www.opendefinition.org/licenses/cc-by':    'http://creativecommons.org/licenses/by/',
     'http://www.opendefinition.org/licenses/cc-by-sa': 'http://creativecommons.org/licenses/by-sa/',
 }
 license_titles = {
-    # EE
-    'Creative Commons BY-SA 3.0': 'http://creativecommons.org/licenses/by-sa/3.0/ee/',
-    'Creative Commons BY 3.0': 'http://creativecommons.org/licenses/by/3.0/ee/',
-
     # Creative Commons
     'cc-nc':    'http://creativecommons.org/licenses/nc/1.0/',
-    # Imprecise
-    'cc-by':    'http://creativecommons.org/licenses/by/',
-    'cc-by-nd': 'http://creativecommons.org/licenses/by-nd/',
+
+    # Creative Commons
+    # AU
     'cc-by-sa': 'http://creativecommons.org/licenses/by-sa/',
+    # EE
+    'Creative Commons BY 3.0': 'http://creativecommons.org/licenses/by/3.0/ee/',
+    # NL
+    'cc-by':    'http://creativecommons.org/licenses/by/',
+
     # Generic
     'License Not Specified': 'http://example.com/notspecified',
 }
