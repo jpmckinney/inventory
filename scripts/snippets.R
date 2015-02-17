@@ -70,7 +70,8 @@ rows$division_id <- country_names(rows$division_id)
 rows$id <- NULL
 
 ggplot(data=rows, aes(x=division_id, y=count)) + geom_boxplot(outlier.size=0) + theme(
-  axis.title=element_blank()
+  axis.title=element_blank(),
+  text=element_text(size=16)
 ) + coord_flip(ylim=c(0, 21)) # hardcode
 
 
