@@ -42,15 +42,15 @@ catalogs = [
     Catalog('ocd-division/country:uy', 'https://catalogodatos.gub.uy/', scraper=CKAN),
 
     # Canadian municipalities
-    Catalog('ocd-division/country:ca/csd:2443027', 'http://donnees.ville.sherbrooke.qc.ca/', scraper=CKAN),
-    Catalog('ocd-division/country:ca/csd:2466023', 'http://donnees.ville.montreal.qc.ca/', scraper=CKAN),
-    Catalog('ocd-division/country:ca/csd:3506008', 'http://data.ottawa.ca/', scraper=CKAN),
-    Catalog('ocd-division/country:ca/csd:4611040', 'https://data.winnipeg.ca/', scraper=Socrata),
-    Catalog('ocd-division/country:ca/csd:4811052', 'https://data.strathcona.ca/', scraper=Socrata),
-    Catalog('ocd-division/country:ca/csd:4811061', 'https://data.edmonton.ca/', scraper=Socrata),
-    Catalog('ocd-division/country:ca/csd:5915001', 'https://data.tol.ca/', scraper=Socrata),
-    Catalog('ocd-division/country:ca/csd:5915004', 'http://data.surrey.ca/', scraper=CKAN),
-    Catalog('ocd-division/country:ca/csd:5915007', 'http://data.whiterockcity.ca/', scraper=CKAN),
+    # Catalog('ocd-division/country:ca/csd:2443027', 'http://donnees.ville.sherbrooke.qc.ca/', scraper=CKAN),
+    # Catalog('ocd-division/country:ca/csd:2466023', 'http://donnees.ville.montreal.qc.ca/', scraper=CKAN),
+    # Catalog('ocd-division/country:ca/csd:3506008', 'http://data.ottawa.ca/', scraper=CKAN),
+    # Catalog('ocd-division/country:ca/csd:4611040', 'https://data.winnipeg.ca/', scraper=Socrata),
+    # Catalog('ocd-division/country:ca/csd:4811052', 'https://data.strathcona.ca/', scraper=Socrata),
+    # Catalog('ocd-division/country:ca/csd:4811061', 'https://data.edmonton.ca/', scraper=Socrata),
+    # Catalog('ocd-division/country:ca/csd:5915001', 'https://data.tol.ca/', scraper=Socrata),
+    # Catalog('ocd-division/country:ca/csd:5915004', 'http://data.surrey.ca/', scraper=CKAN),
+    # Catalog('ocd-division/country:ca/csd:5915007', 'http://data.whiterockcity.ca/', scraper=CKAN),
 
     # >1000:
     # Catalog('ocd-division/country:kr', 'https://www.data.go.kr/'),  # 9268 need a Korean translator for API documentation
