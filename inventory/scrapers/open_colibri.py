@@ -21,7 +21,7 @@ class OpenColibri(Scraper):
             yield package
 
     def save_package(self, package):
-        source_url = '%sapi/public/v1/datasetsapi/%s/' % (self.catalog.url, package['id'])
+        source_url = '%sapi/public/v1/datasetsapi/%s/?format=json' % (self.catalog.url, package['id'])
 
         dataset = self.find_or_initialize(Dataset, division_id=self.catalog.division_id, name=package['id'])
         dataset.json = package
@@ -33,7 +33,7 @@ class OpenColibri(Scraper):
 
         dataset.save()
 
-        for resource in package.get('distribution', []):
+        for resource in package.get('resources', []):
             distribution = self.find_or_initialize(Distribution, dataset=dataset, _id=resource['id'])
             distribution.json = resource
             distribution.custom_properties = [key for key, value in resource.items() if value and key not in opencolibri_distribution_properties]
@@ -41,12 +41,12 @@ class OpenColibri(Scraper):
             for distribution_property, column_name in distribution_properties.items():
                 if resource.get(distribution_property) is not None:
                     setattr(distribution, column_name, resource[distribution_property])
-                if resource.get('file'):
-                    distribution.accessURL = resource['file']
-                elif resource.get('uri'):
-                    distribution.accessURL = resource['uri']
-                if resource.get('file') and resource.get('uri'):
-                    self.warning("both file and uri are set %s" % source_url)
+            if resource.get('file'):
+                distribution.accessURL = resource['file']
+            elif resource.get('uri'):
+                distribution.accessURL = resource['uri']
+            if resource.get('file') and resource.get('uri'):
+                self.warning("both file and uri are set %s" % source_url)
 
             distribution.save()
 
