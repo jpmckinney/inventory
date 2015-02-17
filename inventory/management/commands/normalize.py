@@ -194,28 +194,31 @@ license_ids = {
     'against-drm': 'http://www.freecreations.org/Against_DRM2.html',
 
     # Creative Commons
-    'cc-by-4':                                     'http://creativecommons.org/licenses/by/4.0/',
-    'cc-by-4.0':                                   'http://creativecommons.org/licenses/by/4.0/',
-    'cc-by-4-fi':                                  'http://creativecommons.org/licenses/by/4.0/',
-    'cc-by-sa-1-fi':                               'http://creativecommons.org/licenses/by-sa/1.0/fi/',
-    'cc-zero':                                     'http://creativecommons.org/publicdomain/zero/1.0/',
-    'cc-zero-1.0':                                 'http://creativecommons.org/publicdomain/zero/1.0/',
-    'cc0':                                         'http://creativecommons.org/publicdomain/zero/1.0/',
-    'OKD Compliant::Creative Commons CCZero':      'http://creativecommons.org/publicdomain/zero/1.0/',
-    'creative-commons-attribution-cc-by-':         'http://creativecommons.org/licenses/by/3.0/nl/',
-    'naamsvermelding---gelijkdelen-cc-by-sa-':     'http://creativecommons.org/licenses/by-sa/3.0/nl/',
-    'http://creativecommons.org/licenses/by/3.0/legalcode': 'http://creativecommons.org/licenses/by/3.0/',
-    'http://creativecommons.org/licenses/by-nd/3.0/legalcode': 'http://creativecommons.org/licenses/by-nd/3.0/',
-    'http://creativecommons.org/licenses/by-sa/3.0/legalcode': 'http://creativecommons.org/licenses/by-nd/3.0/',
-    'http://creativecommons.org/publicdomain/zero/1.0/legalcode': 'http://creativecommons.org/publicdomain/zero/1.0/',
+    # CC-BY-4.0
+    'cc-by-4':                                                                                     'http://creativecommons.org/licenses/by/4.0/',
+    'cc-by-4-fi':                                                                                  'http://creativecommons.org/licenses/by/4.0/',
+    'cc-by-4.0':                                                                                   'http://creativecommons.org/licenses/by/4.0/',
+    # CC0
+    'cc-zero':                                                                                     'http://creativecommons.org/publicdomain/zero/1.0/',
+    'cc-zero-1.0':                                                                                 'http://creativecommons.org/publicdomain/zero/1.0/',
+    'cc0':                                                                                         'http://creativecommons.org/publicdomain/zero/1.0/',
     'Creative Commons 1.0 Universal (http://creativecommons.org/publicdomain/zero/1.0/legalcode)': 'http://creativecommons.org/publicdomain/zero/1.0/',
+    'http://creativecommons.org/publicdomain/zero/1.0/legalcode':                                  'http://creativecommons.org/publicdomain/zero/1.0/',
+    'OKD Compliant::Creative Commons CCZero':                                                      'http://creativecommons.org/publicdomain/zero/1.0/',
+    # CC-**-3.0
+    'http://creativecommons.org/licenses/by/3.0/legalcode':                                        'http://creativecommons.org/licenses/by/3.0/',
+    'http://creativecommons.org/licenses/by-nd/3.0/legalcode':                                     'http://creativecommons.org/licenses/by-nd/3.0/',
+    'http://creativecommons.org/licenses/by-sa/3.0/legalcode':                                     'http://creativecommons.org/licenses/by-sa/3.0/',
+
+    # Creative Commons
+    # FI
+    'cc-by-sa-1-fi':                               'http://creativecommons.org/licenses/by-sa/1.0/fi/',
     # GR http://data.gov.gr/terms/
     'OKD Compliant::Creative Commons Attribution': 'http://creativecommons.org/licenses/by/3.0/gr/',
     # NL https://data.overheid.nl/data/
+    'creative-commons-attribution-cc-by-':         'http://creativecommons.org/licenses/by/3.0/nl/',
+    'naamsvermelding---gelijkdelen-cc-by-sa-':     'http://creativecommons.org/licenses/by-sa/3.0/nl/',
     'publiek-domein':                              'http://creativecommons.org/publicdomain/mark/1.0/',
-    # PH confirmed via email
-    'Attribution (CC-BY)':                         'http://creativecommons.org/licenses/by/3.0/ph/',
-    'Attribution-Share Alike (BY-SA)':             'http://creativecommons.org/licenses/by-sa/3.0/ph/',
 
     # Open Data Commons
     'odc-by':   'http://opendatacommons.org/licenses/by/1.0/',
@@ -270,16 +273,14 @@ license_ids = {
     'odc-uy': 'http://datos.gub.uy/wps/wcm/connect/856cc1804db0463baa8bea01b72d8394/terminos-catalogodatos.pdf?MOD=AJPERES&ContentCache=NONE&CACHEID=856cc1804db0463baa8bea01b72d8394',
 
     # Generic
-    'No license provided': 'http://example.com/notspecified',
-    'notspec':             'http://example.com/notspecified',
-    'notspecified':        'http://example.com/notspecified',
     'other':               'http://example.com/other',
+    # https://github.com/ckan/ckan/blob/master/ckan/model/license.py
+    'notspecified':        'http://example.com/notspecified',
     'other-at':            'http://example.com/other-at',
     'other-closed':        'http://example.com/other-closed',
     'other-nc':            'http://example.com/other-nc',
     'other-open':          'http://example.com/other-open',
     'other-pd':            'http://example.com/other-pd',
-    'Public Domain':       'http://example.com/other-pd',
 }
 license_urls = {
     # Identical
