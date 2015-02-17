@@ -49,6 +49,10 @@ class Command(InventoryCommand):
 
         # @todo mimetype_inner (br, uy, it): Distribution.objects.exclude(mimetype_inner='').count()
         for distribution in qs:
+            # Skip spurious "application/vnd.lotus-organizer".
+            if distribution.division_id == 'ocd-division/country:us' and distribution.accessURL.endswith(('.org', '.Org')):
+                continue
+
             self.save = True
 
             guesses = {
