@@ -65,7 +65,7 @@ sd(rows$count)
 
 rows <- rows[!rows$division_id %in% subnational,]
 
-# Draw the boxplot.
+# Draw the boxplot of distributions per dataset.
 rows$division_id <- country_names(rows$division_id)
 rows$id <- NULL
 
@@ -79,23 +79,38 @@ ggplot(data=rows, aes(x=division_id, y=count)) + geom_boxplot(outlier.size=0) + 
 
 width <- 575
 
-fields <- list(
-  c('title', "title != ''"),
-  c('identifier', "identifier != ''"),
-  c('issued', "issued IS NOT NULL"),
-  c('publisher', "publisher != ''"),
-  c('modified', "modified IS NOT NULL"),
-  c('description', "description != ''"),
-  c('keyword', "keyword IS NOT NULL AND keyword != '{}'"),
-  c('contactPoint', "\"contactPoint\" != ''"),
-  c('landingPage', "\"landingPage\" != ''"),
-  c('theme', "theme IS NOT NULL AND theme != '{}'"),
-  c('language', "language != ''"),
-  c('spatial', "spatial != ''"),
-  c('temporal', "temporal != ''"),
-  c('accrualPeriodicity', "\"accrualPeriodicity\" != ''")
+dataset_fields <- list(
+  c('title', "title != ''")
+, c('identifier', "identifier != ''")
+, c('issued', "issued IS NOT NULL")
+, c('publisher', "publisher != ''")
+, c('modified', "modified IS NOT NULL")
+, c('description', "description != ''")
+, c('keyword', "keyword IS NOT NULL AND keyword != '{}'")
+, c('contactPoint', "\"contactPoint\" != ''")
+, c('landingPage', "\"landingPage\" != ''")
+, c('spatial', "spatial != ''")
+, c('accrualPeriodicity', "\"accrualPeriodicity\" != ''")
+, c('language', "language != ''")
+, c('theme', "theme IS NOT NULL AND theme != '{}'")
+, c('temporal', "temporal != ''")
 )
 
+distribution_fields <- list(
+  c('accessURL', "\"accessURL\" != ''")
+, c('issued', "issued IS NOT NULL")
+, c('title', "title != ''")
+, c('format', "format != ''")
+, c('description', "description != ''")
+  # To get the count before normalization
+, c('mediaType', "mimetype != '' OR (division_id = 'ocd-division/country:ke' AND \"mediaType\" != '')")
+, c('byteSize', "\"byteSize\" IS NOT NULL")
+, c('modified', "modified IS NOT NULL")
+)
+
+
+
+# Global dataset metadata element usage.
 # Get the denominator.
 q <- "SELECT COUNT(*) FROM inventory_dataset"
 rows <- dbGetQuery(con, q)
@@ -103,7 +118,7 @@ count <- rows$count
 rows$count <- NULL
 
 # Get the element usage.
-for (field in fields) {
+for (field in dataset_fields) {
   q <- paste("SELECT COUNT(*) FROM inventory_dataset WHERE", field[2])
   rows[field[1]] <- dbGetQuery(con, q)$count / count
 }
@@ -121,13 +136,40 @@ ggplot(data=m, aes(x=variable, y=value)) + geom_bar(stat='identity', width=.75) 
 
 
 
+# Global distribution metadata element usage.
+# Get the denominator.
+q <- "SELECT COUNT(*) FROM inventory_distribution"
+rows <- dbGetQuery(con, q)
+count <- rows$count
+rows$count <- NULL
+
+# Get the element usage.
+for (field in distribution_fields) {
+  q <- paste("SELECT COUNT(*) FROM inventory_distribution WHERE", field[2])
+  rows[field[1]] <- dbGetQuery(con, q)$count / count
+}
+
+# Sort the data.
+rows$id <- ''
+m <- melt(rows, 'id')
+m <- transform(m, variable=reorder(variable, value))
+
+# Draw the bars.
+ggplot(data=m, aes(x=variable, y=value)) + geom_bar(stat='identity', width=.75) + theme(
+  axis.title=element_blank(),
+  text=element_text(size=16)
+) + scale_y_continuous(labels=percent) + coord_flip()
+
+
+
+# Per-catalog dataset metadata element usage.
 # Get the denominator.
 q <- "SELECT division_id, COUNT(*) FROM inventory_dataset GROUP BY division_id ORDER BY division_id"
 rows <- dbGetQuery(con, q)
 count <- rows$count
 
 # Get the element usage per catalog.
-for (field in fields) {
+for (field in dataset_fields) {
   q <- paste("SELECT division_id, COUNT(case when", field[2], "then 1 end) FROM inventory_dataset GROUP BY division_id ORDER BY division_id")
   rows[field[1]] <- dbGetQuery(con, q)$count / count
 }
@@ -139,7 +181,39 @@ m <- melt(rows, 'division_id')
 # Draw the bars.
 m$division_id <- country_names(m$division_id)
 
-png('metadata-catalogs.png', width=width, height=width * 1.5)
+png('~/Downloads/metadata-datasets.png', width=width, height=width * 1.5)
+ggplot(data=m, aes(x=variable, y=value)) + geom_bar(stat='identity') + theme(
+  axis.text.x=element_text(angle=45, hjust=1),
+  axis.title.x=element_blank(),
+  axis.text.y=element_blank(),
+  axis.ticks.y=element_blank(),
+  axis.title.y=element_blank(),
+  strip.text.y=element_text(angle=0)
+) + facet_grid(division_id ~ .)
+dev.off()
+
+
+
+# Per-catalog distribution metadata element usage.
+# Get the denominator.
+q <- "SELECT division_id, COUNT(*) FROM inventory_distribution GROUP BY division_id ORDER BY division_id"
+rows <- dbGetQuery(con, q)
+count <- rows$count
+
+# Get the element usage per catalog.
+for (field in distribution_fields) {
+  q <- paste("SELECT division_id, COUNT(case when", field[2], "then 1 end) FROM inventory_distribution GROUP BY division_id ORDER BY division_id")
+  rows[field[1]] <- dbGetQuery(con, q)$count / count
+}
+
+rows <- rows[!rows$division_id %in% subnational,]
+rows$count <- NULL
+m <- melt(rows, 'division_id')
+
+# Draw the bars.
+m$division_id <- country_names(m$division_id)
+
+png('~/Downloads/metadata-distributions.png', width=width, height=width * 1.5)
 ggplot(data=m, aes(x=variable, y=value)) + geom_bar(stat='identity') + theme(
   axis.text.x=element_text(angle=45, hjust=1),
   axis.title.x=element_blank(),
@@ -188,4 +262,3 @@ ggplot(data=m, aes(x=division_id, y=value)) + geom_bar(stat='identity') + theme(
   axis.title=element_blank(),
   text=element_text(size=16)
 ) + scale_y_continuous(labels=percent) + coord_flip()
-

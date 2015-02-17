@@ -66,12 +66,8 @@ def write_custom(d, filename):
 
 dataset_properties = get_custom(datasets, 'custom_properties')
 dataset_extras = get_custom(datasets, 'extras_keys')
-
 distribution_properties = get_custom(distributions, 'custom_properties')
-distribution_extras = get_custom(distributions, 'extras_keys')
 
 write_custom(dataset_properties, 'dataset_properties')
 write_custom(dataset_extras, 'dataset_extras')
-
 write_custom(distribution_properties, 'distribution_properties')
-write_custom(distribution_extras, 'distribution_extras')
