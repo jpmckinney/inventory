@@ -227,6 +227,71 @@ dev.off()
 
 
 
+# Media types
+
+width <- 575
+
+q <- "SELECT \"mediaType\", COUNT(*) FROM inventory_distribution WHERE \"mediaType\" != '' GROUP BY \"mediaType\""
+rows <- dbGetQuery(con, q)
+rows <- transform(rows, mediaType=reorder(mediaType, count))
+
+media_types <- function (l) {
+  return(revalue(l, c(
+    'application/dbf'='DBF',
+    'application/gml+xml'='GML',
+    'application/gzip'='GZIP',
+    'application/json'='JSON',
+    'application/msword'='Word',
+    'application/pdf'='PDF',
+    'application/rdf+xml'='RDF/XML',
+    'application/rss+xml'='RSS',
+    'application/vnd.google-earth.kml+xml'='KML',
+    'application/vnd.google-earth.kmz'='KMZ',
+    'application/vnd.ms-excel'='Excel',
+    'application/vnd.oasis.opendocument.spreadsheet'='ODS',
+    'application/vnd.ogc.wms_xml'='WMS',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'='Excel 2007',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'='Word 2007',
+    'application/x-ascii-grid'='ASCII GRID',
+    'application/x-filegdb'='Esri file geodatabase',
+    'application/x-hdf'='HDF',  # Hierarchical Data Format
+    'application/x-msaccess'='Access',
+    'application/x-msdownload'='Windows executable',
+    'application/x-netcdf'='NetCDF',
+    'application/x-pc-axis'='PC-Axis',
+    'application/x-segy'='SEG-Y',
+    'application/x-shapefile'='Shapefile',
+    'application/x-tar'='TAR',
+    'application/x-worldfile'='World file',
+    'application/xhtml+xml'='XHTML',
+    'application/xml'='XML',
+    'application/zip'='ZIP',
+    'audio/basic'='Audio',
+    'chemical/x-xyz'='XYZ',
+    'image/gif'='GIF',
+    'image/jp2'='JPEG 2000',
+    'image/jpeg'='JPEG',
+    'image/tiff'='TIFF',
+    'image/x-cdr'='CorelDRAW',
+    'text/csv'='CSV',
+    'text/html'='HTML',
+    'text/n3'='N3',
+    'text/plain'='Plain text',
+    'text/turtle'='Turtle'
+  )))
+}
+
+m <- rows[rows$count>=100,]
+m$mediaType <- media_types(m$mediaType)
+
+png('~/Downloads/media-types.png', width=width, height=width * 1.5)
+ggplot(data=m, aes(x=mediaType, y=count)) + geom_bar(stat='identity') + theme(
+  axis.title=element_blank(),
+  text=element_text(size=16)
+) + scale_y_sqrt() + coord_flip()
+dev.off()
+
+
 # Licenses
 
 exclude <- c(
@@ -263,3 +328,39 @@ ggplot(data=m, aes(x=division_id, y=value)) + geom_bar(stat='identity') + theme(
   axis.title=element_blank(),
   text=element_text(size=16)
 ) + scale_y_continuous(labels=percent) + coord_flip()
+
+
+
+# Global license usage.
+q <- "SELECT license, COUNT(*) FROM inventory_dataset GROUP BY license"
+rows <- dbGetQuery(con, q)
+rows[rows$license=='http://example.com/notspecified',]$count <- rows[rows$license=='http://example.com/notspecified',]$count + rows[rows$license=='',]$count
+rows <- rows[rows$license!='',]
+rows <- transform(rows, license=reorder(license, count))
+
+license_ids <- function (l) {
+  return(revalue(l, c(
+    'http://creativecommons.org/licenses/by/'='CC-BY',
+    'http://creativecommons.org/licenses/by/3.0/au/'='CC-BY-3.0-AU',
+    'http://creativecommons.org/licenses/by/3.0/es'='CC-BY-3.0-ES',
+    'http://creativecommons.org/licenses/by/3.0/it/'='CC-BY-3.0-IT',
+    'http://creativecommons.org/licenses/by/4.0/'='CC-BY-4.0',
+    'http://creativecommons.org/publicdomain/mark/1.0/'='Public Domain',
+    'http://creativecommons.org/publicdomain/zero/1.0/'='CC0-1.0',
+    'http://data.gc.ca/eng/open-government-licence-canada'='OGL-Canada-2.0',
+    'http://data.gov.md/en/terms-and-conditions'='Moldova',
+    'http://example.com/notspecified'='N/A',
+    'http://opendata.aragon.es/terminos'='Aragon',
+    'http://opendatacommons.org/licenses/by/1.0/'='ODC-BY-1.0',
+    'http://www.cis.es/cis/opencms/ES/2_bancodatos/Productos.html'='CIS',
+    'http://www.dati.gov.it/iodl/2.0/'='IODL-2.0',
+    'http://www.nationalarchives.gov.uk/doc/open-government-licence/'='OGL-UK-3.0'
+  )))
+}
+
+m <- rows[rows$count>=500,]
+m$license <- license_ids(m$license)
+ggplot(data=m, aes(x=license, y=count)) + geom_bar(stat='identity') + theme(
+  axis.title=element_blank(),
+  text=element_text(size=16)
+) + scale_y_sqrt() + coord_flip()
