@@ -170,7 +170,7 @@ class Command(InventoryCommand):
             qs.filter(license_title=license_title).update(license=license)
 
     def guess_type(self, value):
-        value = re.sub('\A\.', '', ' '.join(value.lower().split()))  # Normalize case and spaces and remove period from extension.
+        value = re.sub('\A\.', '', ' '.join(value.lower().split()).replace('; charset=binary', ''))  # Normalize case and spaces and remove period from extension.
         value = format_corrections.get(value, value)
         if not self.valid_type(value):
             value = mimetypes.types_map.get('.{}'.format(value), value)
@@ -343,6 +343,9 @@ types = (
     # http://tools.ietf.org/html/rfc3870
     ('application/rdf+xml', '.rdf'),
 
+    # http://www.w3.org/TR/sparql11-results-json/#content-type
+    ('application/sparql-results+json', '.srj'),
+
     # http://www.w3.org/TR/2013/REC-rdf-sparql-XMLres-20130321/#mime
     ('application/sparql-results+xml', '.srx'),
 
@@ -394,6 +397,8 @@ types = (
     # http://reference.wolfram.com/language/ref/format/LWO.html
     ('image/x-lwo', '.lwo'),
 
+    # http://communities.bentley.com/products/projectwise/content_management/w/wiki/5617
+    ('image/vnd.dgn', '.dgn'),
 
 
     # No media type found, so minting:
@@ -412,6 +417,8 @@ types = (
     ('application/x-pbf', '.pbf'),
     # http://en.wikipedia.org/wiki/SEG_Y
     ('application/x-segy', '.sgy'),
+    # http://pxr.r-forge.r-project.org/
+    ('application/x-pc-axis', '.px'),
 )
 
 ambiguous_media_types = {
@@ -454,6 +461,7 @@ format_corrections = {
     # http://portal.opengeospatial.org/files/?artifact_id=37743
     # http://en.wikipedia.org/wiki/Web_Feature_Service
     # GML is default, but SHP is supported.
+    'text/wfs': 'application/gml+xml',
     'wfs': 'application/gml+xml',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
@@ -497,6 +505,10 @@ format_corrections = {
     'tgz': 'application/gzip',
     'txt / gz': 'application/gzip',
 
+    # http://pxr.r-forge.r-project.org/
+    'pc-axis': 'application/x-pc-axis',
+    'text/pc-axis': 'application/x-pc-axis',
+
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://tools.ietf.org/html/rfc3778
     '0_v2 / pdf': 'application/pdf',
@@ -508,6 +520,7 @@ format_corrections = {
     # http://tools.ietf.org/html/rfc3870
     'application/xml+rdf': 'application/rdf+xml',
     'image/rdf': 'application/rdf+xml',
+    'rdf-xml': 'application/rdf+xml',
     'skos rdf': 'application/rdf+xml',
     'skos webservice': 'application/rdf+xml',
     'text/rdf': 'application/rdf+xml',
@@ -520,11 +533,16 @@ format_corrections = {
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # https://tools.ietf.org/html/rfc3902
+    'soap': 'application/soap+xml',
     'soap+xml': 'application/soap+xml',
+
+    # http://www.w3.org/TR/sparql11-results-json/#content-type
+    'sparql-json': 'application/sparql-results+json',
 
     # http://www.w3.org/TR/2013/REC-rdf-sparql-XMLres-20130321/#mime
     'api/sparql': 'application/sparql-results+xml',
     'sparql': 'application/sparql-results+xml',
+    'sparql-xml': 'application/sparql-results+xml',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     'kml/google maps': 'application/vnd.google-earth.kml+xml',
@@ -565,6 +583,7 @@ format_corrections = {
     'application/x-vnd.oasis.opendocument.presentation': 'application/vnd.oasis.opendocument.presentation',
 
     # http://docs.geoserver.org/stable/en/user/services/wms/reference.html
+    'text/wms': 'application/vnd.ogc.wms_xml',
     'wms': 'application/vnd.ogc.wms_xml',
     'wms_xml': 'application/vnd.ogc.wms_xml',
 
@@ -629,9 +648,13 @@ format_corrections = {
     'application/rar': 'application/x-rar-compressed',
     'rar+sas': 'application/x-rar-compressed',
 
+    # https://github.com/qgis/QGIS/blob/master/debian/mime/application
+    'application/ecw': 'application/x-raster-ecw',
+
     'segy': 'application/x-segy',
 
     # http://inspire.ec.europa.eu/media-types/
+    'application/x-zipped-shp': 'application/x-shapefile',
     'arcgis shapefile': 'application/x-shapefile',
     'esri shape file': 'application/x-shapefile',
     'esri shapefile': 'application/x-shapefile',
@@ -727,6 +750,12 @@ format_corrections = {
     # http://reference.wolfram.com/language/ref/format/BMP.html
     'application/bmp': 'image/bmp',
 
+    # http://communities.bentley.com/products/projectwise/content_management/w/wiki/5617
+    'dgn': 'image/vnd.dgn',
+
+    # http://www.iana.org/assignments/media-types/media-types.xhtml
+    'application/dxf': 'image/vnd.dxf',
+
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://tools.ietf.org/html/rfc2046#section-4.2
     'application/jpg': 'image/jpeg',
@@ -753,6 +782,7 @@ format_corrections = {
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://tools.ietf.org/html/rfc5545#section-8.1
+    'calendar': 'text/calendar',
     'icalendar': 'text/calendar',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
@@ -813,8 +843,13 @@ format_corrections = {
     'dat': 'text/plain',
     'fixed-length ascii text': 'text/plain',
     'plain': 'text/plain',
+    'text/ascii': 'text/plain',
     'text/txt': 'text/plain',
     'texte': 'text/plain',
+
+    # http://www.iana.org/assignments/media-types/media-types.xhtml
+    # http://www.w3.org/TeamSubmission/n3/
+    'rdf-n3': 'text/n3',
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     'application/rtf': 'text/rtf',
@@ -824,6 +859,7 @@ format_corrections = {
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     # http://www.w3.org/TeamSubmission/turtle/#sec-mime
+    'rdf-turtle': 'text/turtle',
     'rdf/turtle': 'text/turtle',
     'turtle': 'text/turtle',
 
@@ -836,6 +872,7 @@ ignore_media_types = frozenset([
     '""',
     'all',
     'api',
+    'application/api',
     'application/octet-stream',
     'application/unknown',
     'application/x-unknown-content-type',
@@ -849,6 +886,7 @@ ignore_media_types = frozenset([
     'meta/void',
     'n/a',
     'no-type',
+    'octet stream',
     'rest',
     'service',
     'tool',
