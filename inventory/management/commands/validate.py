@@ -1,107 +1,88 @@
-# @todo code review
 import json
-import logging
-import sys
 import os
-from urllib.parse import quote
-import requests
-
+from contextlib import closing
 from optparse import make_option
+from urllib.parse import quote
+
+import requests
 from Naked.toolshed.shell import muterun_rb
+
 from . import InventoryCommand
 from inventory.models import Distribution
-from logutils.colorize import ColorizingStreamHandler
-
-
-class Handler(ColorizingStreamHandler):
-    level_map = {
-        logging.DEBUG: (None, 'cyan', False),
-        logging.INFO: (None, 'white', False),
-        logging.WARNING: (None, 'yellow', False),
-        logging.ERROR: (None, 'red', False),
-        logging.CRITICAL: ('red', 'white', True),
-    }
-
-logger = logging.getLogger()  # 'inventory' to quiet requests
 
 
 class Command(InventoryCommand):
     args = '<identifier identifier ...>'
-    help = 'Validate files formats'
+    help = 'Validates CSV files with CSVLint.rb'
+
+    csv_validator_path = os.path.join(os.getcwd(), 'inventory', 'validators', 'csv', 'validate_csv.rb')
 
     option_list = InventoryCommand.option_list + (
-        make_option('--nb-distribution', action='store', dest='nb_distribution',
+        make_option('--distributions', type='int', action='store', dest='distributions',
                     default=0,
-                    help='Specifies the number of distributions (e.g files) to validate in this batch (per country is country codes are provided.'),
-        make_option('--nb-lines', action='store', dest='nb_lines',
+                    help='The number of CSV files to validate per catalog'),
+        make_option('--rows', type='int', action='store', dest='rows',
                     default=0,
-                    help='For each CSV files, limit the maximum number of lines to evaluate (e.g runs faster.'),
+                    help='The number of CSV rows to process per file.'),
     )
 
     def handle(self, *args, **options):
-        self.warnings = 0
+        self.setup(*args, **options)
         self.options = options
 
-        logger.setLevel(logging.DEBUG)
-        handler = Handler(sys.stdout)
-        handler.setFormatter(logging.Formatter('%(levelname)-5s %(asctime)s %(message)s', datefmt='%H:%M:%S'))
-
-        self.setup(*args, **options)
-        self.ruby_path = os.getcwd() + '/inventory/validators/csv/validate_csv.rb'
-
         for catalog in self.catalogs:
-            qs = Distribution.objects.filter(mediaType='text/csv').filter(valid__isnull=True).filter(division_id=catalog.division_id)
+            distributions = Distribution.objects.filter(division_id=catalog.division_id, mediaType='text/csv', valid__isnull=True)
 
-            if self.options["nb_distribution"] != 0:
-                qs = qs[0:int(self.options["nb_distribution"])]
+            if self.options['distributions']:
+                distributions = distributions[:self.options['distributions']]
 
-            for distribution in qs:
-                self.execute_validation(distribution)
+            for distribution in distributions:
+                self.validate(distribution)
 
-    def execute_validation(self, distribution):
-        url = quote(distribution.accessURL, safe="%/:=&?~#+!$,;'@()*[]")
+    def validate(self, distribution):
+        url = quote(distribution.accessURL, safe="%/:=&?~#+!$,;'@()*[]") # @todo
 
-        try:
-            r = requests.get(url, stream=True)
-            if r is not None and 'content-length' in r.headers and int(r.headers['content-length']) > 1000000000:
-                logger.info('File  %s is too large (%s), skipping it' % (url, r.headers['content-length']))
-                distribution.validation_headers = r.headers
-                distribution.valid = False
-                distribution.validation_errors = ["too_large"]
-                distribution.save()
-            else:
-                logger.info('Validating %s' % url)
+        # @see http://docs.python-requests.org/en/latest/user/advanced/#body-content-workflow
+        with closing(requests.get(url, stream=True)) as response:
+            if response.status_code == 200:
+                if int(response.headers['content-length']) < 100000000:  # 100MB
+                    self.info('Validating {}'.format(url))
 
-                (result, data) = self.csv_validator(url, self.options["nb_lines"])
+                    (success, data) = self.validate_csv(url)
 
-                if result:
-                    distribution.valid = data["valid"]
-                    distribution.validation_errors = data["errors"]
-                    distribution.validation_content_type = data["content_type"]
-                    distribution.validation_encoding = data["encoding"]
-                    distribution.validation_headers = json.dumps(data["headers"])
-                    distribution.validation_extension = data["extension"]
-                    distribution.save()
+                    if success:
+                        distribution.valid = data['valid']
+                        distribution.validation_encoding = data['encoding']
+                        distribution.validation_content_type = data['content_type']
+                        distribution.validation_extension = data['extension']
+                        distribution.validation_headers = data['headers']
+                        distribution.validation_errors = data['errors']
+                        distribution.save()
+
+                        if data['errors']:
+                            self.debug(data['errors'])
+                    else:
+                        self.error(data)
                 else:
-                    logger.error('Error: %s' % data)
-        except:
-            distribution.validation_headers = ''
-            distribution.valid = False
-            distribution.validation_errors = ["not_found"]
-            distribution.save()
+                    self.info('File {} is too large ({}), skipping it'.format(url, response.headers['content-length']))
+                    distribution.valid = False
+                    distribution.validation_errors = ['too_large']
+                    distribution.save()
+            else:
+                distribution.valid = False
+                distribution.validation_errors = ['http_{}'.format(response.status_code)]
+                distribution.save()
 
-    def csv_validator(self, url, nb_lines):
-        # TODO - Relative path does not work... will have to find a better way than full path
-        command_line = '"' + url + '"'
+    # @see https://github.com/theodi/csvlint.rb#errors
+    def validate_csv(self, url):
+        args = ['"{}"'.format(url)]
 
-        if nb_lines != 0:
-            command_line += ' ' + nb_lines
+        if self.options['rows']:
+            args.append(str(self.options['rows']))
 
-        response = muterun_rb(self.ruby_path, command_line)
+        response = muterun_rb(self.csv_validator_path, ' '.join(args))
 
         if response.exitcode == 0:
-            json_content = response.stdout.decode("utf-8")
-            data = json.loads(json_content)
-            return (True,  data)
+            return (True, json.loads(response.stdout.decode('utf-8')))
         else:
-            return (False,  response.stderr.decode("utf-8"))
+            return (False, response.stderr.decode('utf-8'))

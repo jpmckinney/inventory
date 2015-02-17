@@ -1,83 +1,67 @@
-require 'csvlint'
-require 'uri'
 require 'set'
 require 'timeout'
+require 'uri'
 
-class Hash
-  def to_utf8
-    Hash[
-      self.collect do |k, v|
-        if (v.respond_to?(:to_utf8))
-          [ k, v.to_utf8 ]
-        elsif (v.respond_to?(:encoding))
-          [ k, v.dup.force_encoding('UTF-8') ]
-        else
-          [ k, v ]
-        end
-      end
-    ]
-  end
+require 'csvlint'
+
+# class Hash
+#   def to_utf8
+#     Hash[
+#       self.collect do |k, v|
+#         if (v.respond_to?(:to_utf8))
+#           [ k, v.to_utf8 ]
+#         elsif (v.respond_to?(:encoding))
+#           [ k, v.dup.force_encoding('UTF-8') ]
+#         else
+#           [ k, v ]
+#         end
+#       end
+#     ]
+#   end
+# end
+
+# Avoid double-encoding "%". Escape square brackets.
+UNSAFE = Regexp.new("[^#{URI::PATTERN::UNRESERVED}#{URI::PATTERN::RESERVED}%]|\[|\]")
+
+url = URI.escape(ARGV[0], UNSAFE)
+
+options = {}
+
+if ARGV.length > 1
+  options['limitLines'] = ARGV[1].to_i
 end
 
-nb_lines = 0
-
-if ARGV.length == 0
-  puts "Missing parameter URL for script"
-else
-  #url = URI.escape(URI.escape(ARGV[0]), '[]%')
-  url = URI.escape(URI.escape(ARGV[0], '[]'), Regexp.new("[^#{URI::PATTERN::UNRESERVED}#{URI::PATTERN::RESERVED}%]"))
-  #puts url
-  if ARGV.length > 1
-    nb_lines = ARGV[1].to_i
-  end
-end
-
-opts = {}
-
-if nb_lines > 0
-  opts["limitLines"] = nb_lines
-end
-
-output = {}
+data = {
+  valid: true,
+  encoding: '',
+  content_type: '',
+  extension: '',
+  headers: '',
+  errors: []
+}
 
 begin
-  #If something takes more that 1/2 an hour, we might skip it...
-  complete_results = Timeout.timeout(18000) do      
-  validator = Csvlint::Validator.new(url, opts)
+  Timeout.timeout(60) do # 1 min
+    validator = Csvlint::Validator.new(url, options)
+  end
 
+  data['encoding'] = validator.encoding
+  data['content_type'] = validator.content_type
+  data['extension'] = validator.extension
+  data['headers'] = validator.headers #.to_utf8
 
-  output['encoding'] = validator.encoding
-  output['content_type'] = validator.content_type
-  output['extension']    = validator.extension
-  output['headers']      = validator.headers.to_utf8
-
-  errors = Set.new(validator.errors.map(&:type)).merge(validator.warnings.map(&:type))
+  errors = Set.new(validator.errors.map(&:type)) + validator.warnings.map(&:type)
 
   if errors.any?
-    output['valid'] = false
-    output['errors'] = errors.to_a
-  else   
-    output['valid'] = true
-    output['errors'] = Array.new   
+    data['valid'] = false
+    data['errors'] = errors.to_a
   end
-end
 rescue Timeout::Error
-  output['valid'] = false
-  output['encoding'] = ''
-  output['content_type'] = ''
-  output['extension']    = ''
-  output['headers']      = ''       
-  output['errors'] = Array["time_out"]
-
+  data['valid'] = false
+  data['errors'] = ['timeout']
 rescue Exception => e
-  output['valid'] = false
-  output['encoding'] = ''
-  output['content_type'] = ''
-  output['extension']    = ''
-  output['headers']      = ''
-  output['errors'] = Array[e.message]  
+  data['valid'] = false
+  data['errors'] = [e.message]
 end
 
-puts output.to_json.dup.encode("UTF-8")
-
-
+puts JSON.dumps(data)
