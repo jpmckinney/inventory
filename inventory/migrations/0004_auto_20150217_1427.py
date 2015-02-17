@@ -30,7 +30,11 @@ class Migration(migrations.Migration):
             field=models.TextField(default=''),
             preserve_default=True,
         ),
-        migrations.AlterField(
+        migrations.RemoveField(
+            model_name='distribution',
+            name='validation_headers',
+        ),
+        migrations.AddField(
             model_name='distribution',
             name='validation_headers',
             field=jsonfield.fields.JSONField(default={}),
