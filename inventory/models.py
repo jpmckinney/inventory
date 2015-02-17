@@ -74,8 +74,8 @@ class Distribution(models.Model):  # dcat:Distribution
     description = models.TextField(default='')  # dct
     issued = models.DateTimeField(null=True)  # dct
     modified = models.DateTimeField(null=True)  # dct
-    license = models.URLField(default='', db_index=True)  # dct
-    accessURL = models.URLField(default='', max_length=2000)  # dcat (length 1692 observed)
+    license = models.URLField(default='', db_index=True)  # dct, plus dct:rights
+    accessURL = models.URLField(default='', max_length=2000)  # dcat, plus dcat:downloadURL (length 1692 observed)
     byteSize = models.BigIntegerField(null=True)  # dcat
     format = models.TextField(default='')  # dct
     mediaType = models.TextField(default='', db_index=True)  # dcat
