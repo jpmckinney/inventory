@@ -44,6 +44,18 @@ class Command(InventoryCommand):
             if not mimetypes.types_map.get(extension):
                 mimetypes.add_type(media_type, extension)
 
+        zippable = frozenset([
+            'application/gml+xml',
+            'application/json',
+            'application/pdf',
+            'application/vnd.google-earth.kml+xml',
+            'application/x-ascii-grid',
+            'application/x-filegdb',
+            'application/xml',
+            'image/tiff',
+            'text/csv',
+        ])
+
         self.warnings = {}
         self.warnings_count = 0
 
@@ -72,6 +84,10 @@ class Command(InventoryCommand):
                     guesses['accessURL'] = 'application/gzip'
                 else:
                     guesses['accessURL'] = guess[0] or ''
+
+            # Allow commonly zipped media types to pass. (>150 distributions globally)
+            if guesses['accessURL'] == 'application/zip' and guesses['format'] in zippable and not guesses['mimetype']:
+                guesses['accessURL'] = ''
 
             # Eliminate non-media types.
             for field, media_type in guesses.items():
@@ -612,6 +628,7 @@ format_corrections = {
     'arcinfo workstation grid': 'application/x-ascii-grid',
     'ascii grid': 'application/x-ascii-grid',
     'ascii-grid (arcinfo)': 'application/x-ascii-grid',
+    'esri arc ascii': 'application/x-ascii-grid',
     'esri grid': 'application/x-ascii-grid',
     'grid esri': 'application/x-ascii-grid',
     'grid': 'application/x-ascii-grid',
@@ -638,11 +655,13 @@ format_corrections = {
     'arcgis file geodatabase': 'application/x-filegdb',
     'arcgis geodatabase': 'application/x-filegdb',
     'esri geodatabase feature class': 'application/x-filegdb',
+    'fgdb': 'application/x-filegdb',
     'fgdb / gdb': 'application/x-filegdb',
     'file geo-database (.gdb)': 'application/x-filegdb',
     'file geodatabase': 'application/x-filegdb',
     'gdb (esri)': 'application/x-filegdb',
     'geodatabase': 'application/x-filegdb',
+    'zip:esri_fgdb': 'application/x-filegdb',
 
     # http://en.wikipedia.org/wiki/RAR
     'application/rar': 'application/x-rar-compressed',
@@ -813,7 +832,6 @@ format_corrections = {
     'application/html': 'text/html',
     'arcgis map preview': 'text/html',
     'arcgis online map': 'text/html',
-    'app': 'text/html',
     'hmtl': 'text/html',
     'home page': 'text/html',
     'html+rdfa': 'text/html',
@@ -872,14 +890,17 @@ ignore_media_types = frozenset([
     '""',
     'all',
     'api',
+    'app',
     'application/api',
     'application/octet-stream',
     'application/unknown',
     'application/x-unknown-content-type',
+    'binary',
     'cd-rom',
     'data file',
     'geospatial',
     'edi',  # http://en.wikipedia.org/wiki/Electronic_data_interchange
+    'export',
     'image',
     'img',
     'map',
