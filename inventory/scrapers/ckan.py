@@ -376,7 +376,9 @@ ckan_dataset_properties = frozenset([
     'url_fra',
     # FI
     'copyright_notice_sv',
+    'notes_en',
     'notes_sv',
+    'title_en',
     'title_sv',
     # TZ
     'title_sw',
@@ -390,7 +392,7 @@ ckan_dataset_properties = frozenset([
     'contact-name',  # vcard:fn
     'contact-phone',  # vcard:hasTelephone
     'data_dict',  # JSON as string
-    'update_frequency-other'  # set if `update_frequency` is "other"
+    'update_frequency-other',  # set if `update_frequency` is "other"
     'additional_resources',  # resource partition
     'individual_resources',  # resource partition
     'timeseries_resources',  # resource partition
@@ -422,6 +424,17 @@ ckan_distribution_properties = frozenset([
     'url_type',
     'webstore_last_updated',
     'webstore_url',
+
+    # Translations
+    # CA
+    'name_fra',
+    # FI
+    'description_en',
+    'description_sv',
+    'name_en',
+    'name_sv',
+    'temporal_granularity_en',
+    'update_frequency_en',
 ])
 
 # Map CKAN properties to model properties.
