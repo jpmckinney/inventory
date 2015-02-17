@@ -147,6 +147,10 @@ class CKAN(Scraper):
         dataset.contactPoint = oneof(package, 'maintainer_email', 'author_email', 'contact-email', 'contact_point')
         if package.get('theme-primary'):
             dataset.theme = [package['theme-primary']]
+        elif package.get('subject'):
+            dataset.theme = package['subject']
+        elif package.get('topic_category'):
+            dataset.theme = package['topic_category']
 
         # Determine the license_id.
         license_id = package.get('license_id')
@@ -290,12 +294,20 @@ ckan_dataset_properties = frozenset([
     'type',
     'url',
 
+    # @see https://github.com/datagovau/ckanext-datajson/blob/master/ckanext/datajson/parse_datajson.py
+    # @see https://github.com/open-data/ckanext-canada/blob/master/ckanext/canada/metadata_schema/schema.json
+    # @see https://github.com/datagovuk/ckanext-dgu/blob/master/ckanext/dgu/schema.py
+    # @see https://github.com/datagovuk/ckanext-dgu/blob/master/ckanext/dgu/forms/dataset_form.py
+    # @see https://github.com/datagovuk/ckanext-dgu/blob/master/ckanext/dgu/theme/templates/package/edit_form.html
+
     # dct:language
+    # "The language of the metadata" (fixed)
     'language',  # AU, CA
     'original_language',  # FI
 
     # dct:accrualPeriodicity
     'frekuensi_penerbitan',  # ID
+    # "The frequency with which changes and additions are made to the resource after the initial resource is completed." (vocabulary)
     'maintenance_and_update_frequency',  # CA
     'update_freq',  # AU
     'update_frequency',  # EE, FI, GB, PY, UY
@@ -303,6 +315,7 @@ ckan_dataset_properties = frozenset([
     # dct:spatial
     'cakupan',  # ID
     'geographic_coverage',  # GB
+    # "The representation of spatial information in a dataset." (geojson)
     'spatial',  # AU, CA
     'spatial_coverage',  # AU, UY
     'valid_spatial',  # PY
@@ -314,7 +327,9 @@ ckan_dataset_properties = frozenset([
     'temporal_coverage-to',  # GB
     'temporal_coverage_from',  # AU
     'temporal_coverage_to',  # AU
+    # "The end date or time interval(s) covered by the data. (YYYY-MM-DD)" (date)
     'time_period_coverage_end',  # CA
+    # "The start date or time interval(s) covered by the data. (YYYY-MM-DD)" (date)
     'time_period_coverage_start',  # CA
     'valid_from',  # FI, PY
     'valid_till',  # FI
@@ -325,6 +340,10 @@ ckan_dataset_properties = frozenset([
     'contact-email',  # EE, GB
 
     # dcat:theme
+    # "The main subject(s) of the dataset." (vocabulary)
+    'subject',  # CA
+    # "The main theme(s) of the dataset." (vocabulary)
+    'topic_category',  # CA
     'theme-primary',  # EE, GB
 
     # Not modeled
@@ -359,6 +378,7 @@ ckan_dataset_properties = frozenset([
 
     # Boolean
     'core-dataset',  # EE, GB
+    # "This dataset ready to be published on the Open Data Portal. If box is left unchecked, then the dataset will be saved as a ‘draft’"
     'ready_to_publish',  # CA
     'unpublished',  # EE, GB
 
