@@ -1,6 +1,7 @@
 import mimetypes
 import re
 from optparse import make_option
+from urllib.parse import urlparse
 
 from . import InventoryCommand
 from inventory.models import Dataset, Distribution
@@ -61,10 +62,6 @@ class Command(InventoryCommand):
 
         # @todo mimetype_inner (br, uy, it): Distribution.objects.exclude(mimetype_inner='').count()
         for distribution in qs:
-            # Skip spurious "application/vnd.lotus-organizer".
-            if distribution.division_id == 'ocd-division/country:us' and distribution.accessURL.endswith(('.org', '.Org')):
-                continue
-
             self.save = True
 
             guesses = {
@@ -79,11 +76,19 @@ class Command(InventoryCommand):
             if distribution.format:
                 guesses['format'] = self.guess_type(distribution.format)
             if distribution.accessURL:
-                guess = mimetypes.guess_type(distribution.accessURL)
-                if guess[1] == 'gzip' and (guesses['mimetype'] and guesses['mimetype'] != guess[0] or guesses['format'] and guesses['format'] != guess[0]):
-                    guesses['accessURL'] = 'application/gzip'
+                parsed = urlparse(distribution.accessURL)
+                # Avoid spurious, e.g. "application/vnd.lotus-organizer" from .org
+                # domains and and "audio/basic" from .au domains.
+                if parsed.path:
+                    guess = mimetypes.guess_type(distribution.accessURL)
+                    if guess[1] == 'gzip' and (guesses['mimetype'] and guesses['mimetype'] != guess[0] or guesses['format'] and guesses['format'] != guess[0]):
+                        guesses['accessURL'] = 'application/gzip'
+                    else:
+                        guesses['accessURL'] = guess[0] or ''
                 else:
-                    guesses['accessURL'] = guess[0] or ''
+                    guesses['accessURL'] = ''
+                    if parsed.netloc.endswith('.org') and distribution.format == 'application/vnd.lotus-organizer':
+                        guesses['format'] = ''
 
             # Allow commonly zipped media types to pass. (>150 distributions globally)
             if guesses['accessURL'] == 'application/zip' and guesses['format'] in zippable and not guesses['mimetype']:
@@ -659,6 +664,7 @@ format_corrections = {
     'fgdb / gdb': 'application/x-filegdb',
     'file geo-database (.gdb)': 'application/x-filegdb',
     'file geodatabase': 'application/x-filegdb',
+    'ftp site with zipped esri file geodabases': 'application/x-filegdb',
     'gdb (esri)': 'application/x-filegdb',
     'geodatabase': 'application/x-filegdb',
     'zip:esri_fgdb': 'application/x-filegdb',
@@ -725,27 +731,15 @@ format_corrections = {
 
     # http://www.iana.org/assignments/media-types/media-types.xhtml
     'application/x-zip-compressed': 'application/zip',
-    'application/zip+text/csv': 'application/zip',
-    'csv (inside zip)': 'application/zip',
-    'csv (zip)': 'application/zip',
-    'csv / zip': 'application/zip',
-    'csv file': 'application/zip',
-    'csv.zip': 'application/zip',
-    'ftp site with zipped esri file geodabases': 'application/zip',
     'uso_suolo_dusaf4_2012_polygon.zip': 'application/zip',
-    'zip (csv utf8)': 'application/zip',
-    'zip (csv)': 'application/zip',
     'zip (gpx)': 'application/zip',
     'zip (pdf)': 'application/zip',
     'zip (sql + jpeg)': 'application/zip',
     'zip (sql)': 'application/zip',
     'zip / xml': 'application/zip',
-    'zip file containing csv files': 'application/zip',
-    'zip file containing multiple csv files.': 'application/zip',
     'zip | kml en json': 'application/zip',
     'zip | shape-files + excel': 'application/zip',
     'zip(pdf)': 'application/zip',
-    'zip+csv': 'application/zip',
     'zip+pdf': 'application/zip',
     'zip+sas': 'application/zip',
     'zip+sav': 'application/zip',
@@ -761,6 +755,17 @@ format_corrections = {
     'zip:xml en csv': 'application/zip',
     'zip:xml': 'application/zip',
     'zipped esri file geodatabase': 'application/zip',
+    # CSV
+    'application/zip+text/csv': 'application/zip',
+    'csv (inside zip)': 'application/zip',
+    'csv (zip)': 'application/zip',
+    'csv / zip': 'application/zip',
+    'csv.zip': 'application/zip',
+    'zip (csv utf8)': 'application/zip',
+    'zip (csv)': 'application/zip',
+    'zip file containing csv files': 'application/zip',
+    'zip file containing multiple csv files.': 'application/zip',
+    'zip+csv': 'application/zip',
     # http://www.geobase.ca/geobase/en/data/cded/description.html
     'cdec ascii': 'application/zip',
     # https://developers.google.com/transit/gtfs/reference
