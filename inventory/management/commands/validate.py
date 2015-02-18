@@ -1,11 +1,11 @@
 import json
 import os
+import subprocess
 from contextlib import closing
 from optparse import make_option
 from urllib.parse import quote
 
 import requests
-from Naked.toolshed.shell import muterun_rb
 
 from . import InventoryCommand
 from inventory.models import Distribution
@@ -40,13 +40,18 @@ class Command(InventoryCommand):
                 self.validate(distribution)
 
     def validate(self, distribution):
-        url = quote(distribution.accessURL, safe="%/:=&?~#+!$,;'@()*[]") # @todo
+        url = quote(distribution.accessURL, safe="%/:=&?~#+!$,;'@()*[]") # @todo where are these characters from?
 
         # @see http://docs.python-requests.org/en/latest/user/advanced/#body-content-workflow
-        with closing(requests.get(url, stream=True)) as response:
+        with closing(requests.get(url, stream=True, allow_redirects=False)) as response:
+            distribution.validation_encoding = response.encoding
+            distribution.validation_content_type = response.headers['content-type']
+            distribution.validation_headers = dict(response.headers)
+
             if response.status_code == 200:
-                if int(response.headers['content-length']) < 100000000:  # 100MB
-                    self.info('Validating {}'.format(url))
+                content_length = int(response.headers.get('content-length', 0))
+                if content_length < 100000000:  # 100MB
+                    self.info(url)
 
                     (success, data) = self.validate_csv(url)
 
@@ -54,7 +59,6 @@ class Command(InventoryCommand):
                         distribution.valid = data['valid']
                         distribution.validation_encoding = data['encoding']
                         distribution.validation_content_type = data['content_type']
-                        distribution.validation_extension = data['extension']
                         distribution.validation_headers = data['headers']
                         distribution.validation_errors = data['errors']
                         distribution.save()
@@ -64,25 +68,34 @@ class Command(InventoryCommand):
                     else:
                         self.error(data)
                 else:
-                    self.info('File {} is too large ({}), skipping it'.format(url, response.headers['content-length']))
+                    self.warning('too large {} {}'.format(format_size(int(content_length)), url))
                     distribution.valid = False
                     distribution.validation_errors = ['too_large']
                     distribution.save()
             else:
+                self.warning('HTTP {} code {}'.format(response.status_code, url))
                 distribution.valid = False
                 distribution.validation_errors = ['http_{}'.format(response.status_code)]
                 distribution.save()
 
     # @see https://github.com/theodi/csvlint.rb#errors
     def validate_csv(self, url):
-        args = ['"{}"'.format(url)]
+        args = ['ruby', self.csv_validator_path, url]
 
         if self.options['rows']:
             args.append(str(self.options['rows']))
 
-        response = muterun_rb(self.csv_validator_path, ' '.join(args))
+        try:
+            output = subprocess.check_output(args)
+        except subprocess.CalledProcessError as err:
+            return (False, err.output.decode('utf-8'))
 
-        if response.exitcode == 0:
-            return (True, json.loads(response.stdout.decode('utf-8')))
-        else:
-            return (False, response.stderr.decode('utf-8'))
+        return (True, json.loads(output.decode('utf-8')))
+
+
+def format_size(number, suffix='B'):
+    for unit in ['', 'K', 'M', 'G']:
+        if number < 1000:
+            return '%3.1f%s%s' % (number, unit, suffix)
+        number /= 1000
+    return '%.1f%s%s' % (number, 'T', suffix)

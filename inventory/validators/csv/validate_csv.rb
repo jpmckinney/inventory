@@ -4,22 +4,6 @@ require 'uri'
 
 require 'csvlint'
 
-# class Hash
-#   def to_utf8
-#     Hash[
-#       self.collect do |k, v|
-#         if (v.respond_to?(:to_utf8))
-#           [ k, v.to_utf8 ]
-#         elsif (v.respond_to?(:encoding))
-#           [ k, v.dup.force_encoding('UTF-8') ]
-#         else
-#           [ k, v ]
-#         end
-#       end
-#     ]
-#   end
-# end
-
 # Avoid double-encoding "%". Escape square brackets.
 UNSAFE = Regexp.new("[^#{URI::PATTERN::UNRESERVED}#{URI::PATTERN::RESERVED}%]|\[|\]")
 
@@ -35,33 +19,28 @@ data = {
   valid: true,
   encoding: '',
   content_type: '',
-  extension: '',
   headers: '',
-  errors: []
+  errors: [],
 }
 
 begin
   Timeout.timeout(60) do # 1 min
     validator = Csvlint::Validator.new(url, options)
-  end
 
-  data['encoding'] = validator.encoding
-  data['content_type'] = validator.content_type
-  data['extension'] = validator.extension
-  data['headers'] = validator.headers #.to_utf8
+    data['encoding'] = validator.encoding
+    data['content_type'] = validator.content_type
+    data['headers'] = validator.headers
 
-  errors = Set.new(validator.errors.map(&:type)) + validator.warnings.map(&:type)
+    errors = Set.new(validator.errors.map(&:type)) + validator.warnings.map(&:type)
 
-  if errors.any?
-    data['valid'] = false
-    data['errors'] = errors.to_a
+    if errors.any?
+      data['valid'] = false
+      data['errors'] = errors.to_a
+    end
   end
 rescue Timeout::Error
   data['valid'] = false
   data['errors'] = ['timeout']
-rescue Exception => e
-  data['valid'] = false
-  data['errors'] = [e.message]
 end
 
-puts JSON.dumps(data)
+puts JSON.dump(data)
