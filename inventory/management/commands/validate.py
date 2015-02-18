@@ -44,14 +44,15 @@ class Command(InventoryCommand):
 
         # @see http://docs.python-requests.org/en/latest/user/advanced/#body-content-workflow
         with closing(requests.get(url, stream=True, allow_redirects=False)) as response:
-            distribution.validation_encoding = response.encoding
-            distribution.validation_content_type = response.headers['content-type']
+            distribution.validation_encoding = response.encoding or ''
+            distribution.validation_content_type = response.headers.get('content-type', '')
             distribution.validation_headers = dict(response.headers)
 
             if response.status_code == 200:
                 content_length = int(response.headers.get('content-length', 0))
-                if content_length < 100000000:  # 100MB
-                    self.info(url)
+                human_size = format_size(int(content_length))
+                if content_length < 1e6:  # 1MB
+                    self.info('{} {}'.format(human_size, url))
 
                     (success, data) = self.validate_csv(url)
 
@@ -68,7 +69,7 @@ class Command(InventoryCommand):
                     else:
                         self.error(data)
                 else:
-                    self.warning('too large {} {}'.format(format_size(int(content_length)), url))
+                    self.warning('too large {} {}'.format(human_size, url))
                     distribution.valid = False
                     distribution.validation_errors = ['too_large']
                     distribution.save()
@@ -96,6 +97,6 @@ class Command(InventoryCommand):
 def format_size(number, suffix='B'):
     for unit in ['', 'K', 'M', 'G']:
         if number < 1000:
-            return '%3.1f%s%s' % (number, unit, suffix)
+            return '%3.1f %s%s' % (number, unit, suffix)
         number /= 1000
-    return '%.1f%s%s' % (number, 'T', suffix)
+    return '%.1f %s%s' % (number, 'T', suffix)
