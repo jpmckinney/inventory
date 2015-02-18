@@ -87,8 +87,11 @@ class InventoryCommand(BaseCommand):
 
 
 def number_to_human_size(number, suffix='B'):
-    for unit in ['', 'K', 'M', 'G']:
-        if number < 1000:
-            return '%3.1f %s%s' % (number, unit, suffix)
-        number /= 1000
-    return '%.1f %s%s' % (number, 'T', suffix)
+    if number is None:
+        return '-'
+    else:
+        for unit in ['', 'K', 'M', 'G']:
+            if number < 1000:
+                return '%3.1f %s%s' % (number, unit, suffix)
+            number /= 1000
+        return '%.1f %s%s' % (number, 'T', suffix)

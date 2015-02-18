@@ -60,8 +60,7 @@ class Command(InventoryCommand):
         self.warnings = {}
         self.warnings_count = 0
 
-        # @todo mimetype_inner (br, uy, it): Distribution.objects.exclude(mimetype_inner='').count()
-        for distribution in qs:
+        for distribution in qs.iterator():
             self.save = True
 
             guesses = {

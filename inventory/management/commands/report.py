@@ -54,7 +54,7 @@ class Command(InventoryCommand):
         def getter(catalog):
             if catalog.scraper.__name__ == 'CKAN':
                 datasets = Dataset.objects.filter(division_id=catalog.division_id)
-                if datasets:
+                if datasets.exists():
                     response = self.get(catalog.dataset_url(datasets[0]))
                     if response.status_code == 200:
                         response = self.get(catalog.dataset_rdf_url(datasets[0]))
@@ -72,7 +72,7 @@ class Command(InventoryCommand):
     def schemaorg(self):
         def getter(catalog):
             datasets = Dataset.objects.filter(division_id=catalog.division_id)
-            if datasets:
+            if datasets.exists():
                 url = catalog.dataset_url(datasets[0])
                 if url:
                     response = self.get(url)
@@ -123,7 +123,7 @@ class Command(InventoryCommand):
         for catalog in self.catalogs:
             count = Dataset.objects.filter(division_id=catalog.division_id).count()
             print('{} ({})'.format(catalog.division_id, count))
-            for value in klass.objects.filter(division_id=catalog.division_id).values(field).annotate(count=Count(distinct, distinct=True)).order_by('count'):
+            for value in klass.objects.filter(division_id=catalog.division_id).values(field).annotate(count=Count(distinct, distinct=True)).order_by('count').iterator():
                 print('  {:7.2%} {} ({})'.format(value['count'] / count, value[field], value['count']))
 
     def source_type(self, catalog, package):

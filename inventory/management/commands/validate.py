@@ -33,7 +33,7 @@ class Command(InventoryCommand):
             if self.options['distributions']:
                 distributions = distributions[:self.options['distributions']]
 
-            for distribution in distributions:
+            for distribution in distributions.iterator():
                 self.validate(distribution)
 
     def validate(self, distribution):
