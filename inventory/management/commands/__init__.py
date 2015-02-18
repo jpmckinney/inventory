@@ -53,6 +53,7 @@ class InventoryCommand(BaseCommand):
         self.warning = self.logger.warning
         self.error = self.logger.error
         self.critical = self.logger.critical
+        self.exception = self.logger.exception
 
         handler = Handler(sys.stdout)
         handler.setFormatter(logging.Formatter('%(levelname)-5s %(asctime)s %(message)s', datefmt='%H:%M:%S'))
@@ -83,3 +84,11 @@ class InventoryCommand(BaseCommand):
         if response.status_code != 200:
             self.warning('{} {}'.format(response.status_code, response.url))
         return response
+
+
+def number_to_human_size(number, suffix='B'):
+    for unit in ['', 'K', 'M', 'G']:
+        if number < 1000:
+            return '%3.1f %s%s' % (number, unit, suffix)
+        number /= 1000
+    return '%.1f %s%s' % (number, 'T', suffix)

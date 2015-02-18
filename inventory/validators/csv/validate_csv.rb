@@ -21,21 +21,12 @@ end
 
 data = {
   valid: true,
-  encoding: '',
-  content_type: '',
-  headers: '',
   errors: [],
 }
 
 Timeout.timeout(60) do # 1 min
   validator = Csvlint::Validator.new(url, nil, nil, options)
-
-  data['encoding'] = validator.encoding
-  data['content_type'] = validator.content_type
-  data['headers'] = validator.headers
-
   errors = Set.new(validator.errors.map(&:type)) + validator.warnings.map(&:type)
-
   if errors.any?
     data['valid'] = false
     data['errors'] = errors.to_a

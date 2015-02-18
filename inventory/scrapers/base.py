@@ -12,6 +12,7 @@ class Scraper(object):
         self.warning = self.logger.warning
         self.error = self.logger.error
         self.critical = self.logger.critical
+        self.exception = self.logger.exception
 
     def __str__(self):
         return str(self.catalog)

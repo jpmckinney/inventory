@@ -1,26 +1,23 @@
 import json
 import os
 import subprocess
-from contextlib import closing
 from optparse import make_option
 from urllib.parse import quote
 
-import requests
-
-from . import InventoryCommand
+from . import InventoryCommand, number_to_human_size
 from inventory.models import Distribution
 
 
 class Command(InventoryCommand):
     args = '<identifier identifier ...>'
-    help = 'Validates CSV files with CSVLint.rb'
+    help = 'Validates CSV files with CSVLint.rb (the headers command must be run beforehand)'
 
     csv_validator_path = os.path.join(os.getcwd(), 'inventory', 'validators', 'csv', 'validate_csv.rb')
 
     option_list = InventoryCommand.option_list + (
         make_option('--distributions', type='int', action='store', dest='distributions',
                     default=0,
-                    help='The number of CSV files to validate per catalog'),
+                    help='The number of CSV files to validate per catalog.'),
         make_option('--rows', type='int', action='store', dest='rows',
                     default=0,
                     help='The number of CSV rows to process per file.'),
@@ -40,44 +37,20 @@ class Command(InventoryCommand):
                 self.validate(distribution)
 
     def validate(self, distribution):
-        url = quote(distribution.accessURL, safe="%/:=&?~#+!$,;'@()*[]") # @todo where are these characters from?
+        if distribution.http_status_code == 200 and distribution.http_content_length and distribution.http_content_length < 1e6:  # 1 MB
+            # @see http://stackoverflow.com/a/845595/244258
+            url = quote(distribution.accessURL, safe="%/:=&?~#+!$,;'@()*[]")
+            self.info('{} {}'.format(number_to_human_size(distribution.http_content_length), url))
+            (success, data) = self.validate_csv(url)
 
-        # @see http://docs.python-requests.org/en/latest/user/advanced/#body-content-workflow
-        with closing(requests.get(url, stream=True, allow_redirects=False)) as response:
-            distribution.validation_encoding = response.encoding or ''
-            distribution.validation_content_type = response.headers.get('content-type', '')
-            distribution.validation_headers = dict(response.headers)
-
-            if response.status_code == 200:
-                content_length = int(response.headers.get('content-length', 0))
-                human_size = format_size(int(content_length))
-                if content_length < 1e6:  # 1MB
-                    self.info('{} {}'.format(human_size, url))
-
-                    (success, data) = self.validate_csv(url)
-
-                    if success:
-                        distribution.valid = data['valid']
-                        distribution.validation_encoding = data['encoding']
-                        distribution.validation_content_type = data['content_type']
-                        distribution.validation_headers = data['headers']
-                        distribution.validation_errors = data['errors']
-                        distribution.save()
-
-                        if data['errors']:
-                            self.debug(data['errors'])
-                    else:
-                        self.error(data)
-                else:
-                    self.warning('too large {} {}'.format(human_size, url))
-                    distribution.valid = False
-                    distribution.validation_errors = ['too_large']
-                    distribution.save()
-            else:
-                self.warning('HTTP {} code {}'.format(response.status_code, url))
-                distribution.valid = False
-                distribution.validation_errors = ['http_{}'.format(response.status_code)]
+            if success:
+                distribution.valid = data['valid']
+                distribution.errors = data['errors']
                 distribution.save()
+                if data['errors']:
+                    self.debug(data['errors'])
+            else:
+                self.error(data)
 
     # @see https://github.com/theodi/csvlint.rb#errors
     def validate_csv(self, url):
@@ -92,11 +65,3 @@ class Command(InventoryCommand):
             return (False, err.output.decode('utf-8'))
 
         return (True, json.loads(output.decode('utf-8')))
-
-
-def format_size(number, suffix='B'):
-    for unit in ['', 'K', 'M', 'G']:
-        if number < 1000:
-            return '%3.1f %s%s' % (number, unit, suffix)
-        number /= 1000
-    return '%.1f %s%s' % (number, 'T', suffix)

@@ -84,12 +84,16 @@ class Distribution(models.Model):  # dcat:Distribution
     mimetype = models.TextField(default='')
     mimetype_inner = models.TextField(default='')
 
-    # CSV
+    # HTTP headers
+    http_headers = JSONField(default={})
+    http_status_code = models.SmallIntegerField(null=True)
+    http_content_length = models.BigIntegerField(null=True)
+    http_content_type = models.TextField(default='')
+    http_charset = models.TextField(default='')
+
+    # CSV validation
     valid = models.NullBooleanField(null=True)
-    validation_encoding = models.TextField(default='')
-    validation_content_type = models.TextField(default='')
-    validation_headers = JSONField(default={})
-    validation_errors = ArrayField(dbtype='text')
+    errors = ArrayField(dbtype='text')
 
     class Meta:
         unique_together = (('dataset', '_id'),)
