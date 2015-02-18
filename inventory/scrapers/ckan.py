@@ -77,9 +77,11 @@ class CKAN(Scraper):
                     yield package
 
     def save_package(self, package):
-        if package['type'] == 'harvest':  # harvest packages contain packages, not resources
+        # Harvest packages contain packages, not resources.
+        if package['type'] == 'harvest':
             return
 
+        # Scrape only national organizations in IT.
         if self.catalog.division_id == 'ocd-division/country:it' and package['organization'] and package['organization']['name'] not in organization_names:
             return
 
@@ -88,7 +90,7 @@ class CKAN(Scraper):
         extras = {}
 
         # Change extras from a list to a dictionary and make values uniform.
-        for extra in package.get('extras', []):
+        for extra in package.get('extras', []):  # XXX alters source data
             value = extra['value']
 
             if isinstance(value, str):
@@ -154,7 +156,7 @@ class CKAN(Scraper):
 
         # Determine the license_id.
         license_id = package.get('license_id')
-        if not license_id:
+        if not license_id:  # XXX alters source data
             # License URLs have been found in "licence_url", "licence_url_title" and "access_constraints".
             match = next((value for value in extras.values() if value in licence_url_to_license_id), None)
             if match:
@@ -207,7 +209,7 @@ class CKAN(Scraper):
         # license_url and license_title should agree with the extra licence_url
         # and licence_url_title.
         license_url = extras.get('licence_url') or extras.get('license_url')
-        if license_url:
+        if license_url:  # XXX alters source data
             if package.get('license_url'):
                 if license_url != package['license_url'] and not (
                     # @note AU's "licence_url" uses a different, valid URL for "cc-by".
@@ -225,14 +227,16 @@ class CKAN(Scraper):
                 dataset.license_url = license_url
             else:
                 dataset.license_id = license_url
-        if extras.get('licence_url_title'):
+
+        license_title = extras.get('licence_url_title')
+        if license_title:  # XXX alters source data
             if package.get('license_title'):
-                if extras['licence_url_title'] != package['license_title']:
-                    self.warning('extras.licence_url_title expected %s got %s %s' % (package['license_title'], extras['licence_url_title'], source_url))
+                if license_title != package['license_title']:
+                    self.warning('extras.licence_url_title expected %s got %s %s' % (package['license_title'], license_title, source_url))
             elif license_id:  # only runs if license_title not previously set
-                dataset.license_title = extras['licence_url_title']
+                dataset.license_title = license_title
             else:
-                dataset.license_id = extras['licence_url_title']
+                dataset.license_id = license_title
 
         try:
             dataset.save()

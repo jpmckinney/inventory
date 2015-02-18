@@ -1,5 +1,6 @@
-import requests
 from datetime import datetime
+
+import requests
 from lxml import etree
 
 from .base import Scraper

@@ -48,7 +48,7 @@ class RDF(Scraper):
             elif column_name in ('issued', 'modified'):
                 value = self.get_value(package, dataset_property)
                 if value is not None and value not in ('T00:00:00Z', 'Z'):
-                    setattr(dataset, column_name, value.replace('ZZ', 'Z'))  # e.g. "2010-11-17T00:00:00ZZ"
+                    setattr(dataset, column_name, value.replace('ZZ', 'Z'))  # e.g. "2010-11-17T00:00:00ZZ" # XXX alters source data
             else:
                 value = self.get_value(package, dataset_property)
                 if value is not None:

@@ -1,13 +1,7 @@
-import re
-
 import requests
 
 from .base import Scraper
 from ..models import Dataset, Distribution
-
-citation_re = re.compile(r'\b(?:citation|mu[cs]t (?:acknowledge|cite|be attributed))\b')
-python_value_re = re.compile(r"\A\[u'")
-gb_open_license_re = re.compile(r'open government licen[sc]e', re.IGNORECASE)
 
 
 class Socrata(Scraper):
@@ -33,7 +27,7 @@ class Socrata(Scraper):
         for dataset_property, column_name in dataset_properties.items():
             if package.get(dataset_property) is not None:
                 setattr(dataset, column_name, package[dataset_property])
-        if package['contactPoint']['fn'] != '<Nobody>' and package['contactPoint']['hasEmail'] != 'mailto:':
+        if package['contactPoint']['fn'] != '<Nobody>' and package['contactPoint']['hasEmail'] != 'mailto:':  # XXX alters source data
             dataset.maintainer = package['contactPoint']['fn']
             dataset.maintainer_email = package['contactPoint']['hasEmail']
         dataset.publisher = package['publisher']['name']
