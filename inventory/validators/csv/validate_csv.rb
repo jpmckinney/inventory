@@ -23,24 +23,19 @@ data = {
   errors: [],
 }
 
-begin
-  Timeout.timeout(60) do # 1 min
-    validator = Csvlint::Validator.new(url, options)
+Timeout.timeout(60) do # 1 min
+  validator = Csvlint::Validator.new(url, options)
 
-    data['encoding'] = validator.encoding
-    data['content_type'] = validator.content_type
-    data['headers'] = validator.headers
+  data['encoding'] = validator.encoding
+  data['content_type'] = validator.content_type
+  data['headers'] = validator.headers
 
-    errors = Set.new(validator.errors.map(&:type)) + validator.warnings.map(&:type)
+  errors = Set.new(validator.errors.map(&:type)) + validator.warnings.map(&:type)
 
-    if errors.any?
-      data['valid'] = false
-      data['errors'] = errors.to_a
-    end
+  if errors.any?
+    data['valid'] = false
+    data['errors'] = errors.to_a
   end
-rescue Timeout::Error
-  data['valid'] = false
-  data['errors'] = ['timeout']
 end
 
 puts JSON.dump(data)
