@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/jpmckinney/csvlint.rb.git
-  revision: d807200d6d48002cd21ebddeabc857eaf8c6b534
+  revision: f0738b32710e75f931d4fdeefe003fae4d66faec
   branch: hotfix
   specs:
     csvlint (0.1.0)

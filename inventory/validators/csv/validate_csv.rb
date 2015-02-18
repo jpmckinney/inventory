@@ -1,3 +1,7 @@
+# coding: utf-8
+require 'rubygems'
+require 'bundler/setup'
+
 require 'set'
 require 'timeout'
 require 'uri'
@@ -12,7 +16,7 @@ url = URI.escape(ARGV[0], UNSAFE)
 options = {}
 
 if ARGV.length > 1
-  options['limitLines'] = ARGV[1].to_i
+  options[:limit_lines] = ARGV[1].to_i
 end
 
 data = {
@@ -24,7 +28,7 @@ data = {
 }
 
 Timeout.timeout(60) do # 1 min
-  validator = Csvlint::Validator.new(url, options)
+  validator = Csvlint::Validator.new(url, nil, nil, options)
 
   data['encoding'] = validator.encoding
   data['content_type'] = validator.content_type
