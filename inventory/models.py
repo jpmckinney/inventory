@@ -88,7 +88,6 @@ class Distribution(models.Model):  # dcat:Distribution
     valid = models.NullBooleanField(null=True)
     validation_encoding = models.TextField(default='')
     validation_content_type = models.TextField(default='')
-    validation_extension = models.TextField(default='')
     validation_headers = JSONField(default={})
     validation_errors = ArrayField(dbtype='text')
 
