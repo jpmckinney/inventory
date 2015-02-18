@@ -10,7 +10,7 @@ from inventory.models import Distribution
 
 class Command(InventoryCommand):
     args = '<identifier identifier ...>'
-    help = 'Validates CSV files with CSVLint.rb (the headers command must be run beforehand)'
+    help = 'Validates CSV files with CSVLint.rb (must run headers command first)'
 
     csv_validator_path = os.path.join(os.getcwd(), 'inventory', 'validators', 'csv', 'validate_csv.rb')
 

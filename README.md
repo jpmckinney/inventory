@@ -10,17 +10,25 @@ Scripts used by the [Open Government Partnership](http://www.opengovpartnership.
     createdb inventory
     ./manage.py migrate
 
-Scrape all CKAN APIs:
+Scrape all catalogs:
 
     ./manage.py scrape
 
-Scrape select CKAN APIs:
+Scrape selected catalogs:
 
     ./manage.py scrape ca us
 
 Normalize licenses and media types:
 
     ./manage.py normalize --licenses --media-types
+
+Retrieve HTTP headers for CSV files:
+
+    ./manage.py headers --media_type text/csv
+
+Validate CSV files (must run headers command first):
+
+    ./manage.py validate
 
 Read reports on the usage of licenses, media types, catalog structures, DCAT, Project Open Data Metadata Schema, Schema.org, data federation:
 
