@@ -8,6 +8,8 @@ require 'uri'
 
 require 'csvlint'
 
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
+
 # Avoid double-encoding "%". Escape square brackets.
 UNSAFE = Regexp.new("[^#{URI::PATTERN::UNRESERVED}#{URI::PATTERN::RESERVED}%]|\[|\]")
 

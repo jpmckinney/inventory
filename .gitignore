@@ -2,3 +2,4 @@
 /action-plans
 *.DS_Store
 *__pycache__
+*.Rhistory
