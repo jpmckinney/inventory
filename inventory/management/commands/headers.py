@@ -22,7 +22,13 @@ class Command(InventoryCommand):
     def handle(self, *args, **options):
         self.setup(*args, **options)
 
+        # Avoids "Connection pool is full, discarding connection" warnings.
+        # @see http://docs.python-requests.org/en/latest/api/#requests.adapters.HTTPAdapter
+        # @see https://github.com/ross/requests-futures/blob/master/requests_futures/sessions.py
         session = FuturesSession()
+        adapter_kwargs = {'pool_maxsize': 10}
+        session.mount('https://', requests.adapters.HTTPAdapter(**adapter_kwargs))
+        session.mount('http://', requests.adapters.HTTPAdapter(**adapter_kwargs))
 
         # Collect the distribution-response pairs.
         def callback(distribution, response):
@@ -51,6 +57,7 @@ class Command(InventoryCommand):
                 futures = []
                 results = []
 
+                # If an exception occurs, we lose progress on at most 100 requests.
                 for distribution in distributions.filter(pk__gt=pk)[:100]:
                     pk = distribution.pk
 
@@ -64,7 +71,12 @@ class Command(InventoryCommand):
                 for future in futures:
                     try:
                         future.result()
-                    except (requests.exceptions.InvalidSchema, requests.exceptions.InvalidURL, requests.exceptions.SSLError, requests.packages.urllib3.exceptions.ProtocolError):
+                    except (
+                        requests.exceptions.InvalidSchema,
+                        requests.exceptions.InvalidURL,
+                        requests.exceptions.MissingSchema,
+                        requests.exceptions.SSLError,
+                        requests.packages.urllib3.exceptions.ProtocolError):
                         self.exception('')
 
                 for distribution, response in results:

@@ -7,6 +7,7 @@ library(scales)
 # @see https://code.google.com/p/rpostgresql/
 con <- dbConnect(dbDriver('PostgreSQL'), dbname='inventory')
 
+# Avoid having any subnational catalogs sneak into results.
 subnational <- c(
   'ocd-division/country:ca/csd:2443027',
   'ocd-division/country:ca/csd:2466023',
@@ -52,6 +53,7 @@ country_names <- function (l) {
   )))
 }
 
+quote <- function(l) lapply(l, function(x) paste("'", x, "'", sep=''))
 
 
 # Catalog structure
@@ -231,10 +233,6 @@ dev.off()
 
 width <- 575
 
-q <- "SELECT \"mediaType\", COUNT(*) FROM inventory_distribution WHERE \"mediaType\" != '' GROUP BY \"mediaType\""
-rows <- dbGetQuery(con, q)
-rows <- transform(rows, mediaType=reorder(mediaType, count))
-
 media_types <- function (l) {
   return(revalue(l, c(
     'application/dbf'='DBF',
@@ -245,6 +243,7 @@ media_types <- function (l) {
     'application/pdf'='PDF',
     'application/rdf+xml'='RDF/XML',
     'application/rss+xml'='RSS',
+    'application/vnd.geo+json'='GeoJSON',
     'application/vnd.google-earth.kml+xml'='KML',
     'application/vnd.google-earth.kmz'='KMZ',
     'application/vnd.ms-excel'='Excel',
@@ -266,7 +265,6 @@ media_types <- function (l) {
     'application/xhtml+xml'='XHTML',
     'application/xml'='XML',
     'application/zip'='ZIP',
-    'audio/basic'='Audio',
     'chemical/x-xyz'='XYZ',
     'image/gif'='GIF',
     'image/jp2'='JPEG 2000',
@@ -281,6 +279,13 @@ media_types <- function (l) {
   )))
 }
 
+
+
+# Global media type usage.
+q <- "SELECT \"mediaType\", COUNT(*) FROM inventory_distribution WHERE \"mediaType\" != '' GROUP BY \"mediaType\""
+rows <- dbGetQuery(con, q)
+rows <- transform(rows, mediaType=reorder(mediaType, count))
+
 m <- rows[rows$count>=100,]
 m$mediaType <- media_types(m$mediaType)
 
@@ -292,16 +297,78 @@ ggplot(data=m, aes(x=mediaType, y=count)) + geom_bar(stat='identity') + theme(
 dev.off()
 
 
+
+# Per-catalog geospatial media type usage.
+geospatial_media_types <- c(
+  # Documents
+  # application/pdf matches too many.
+  # Archives
+  # application/zip matches too many.
+  # Generic
+  # application/json and application/xml match too many, in some catalogs.
+  # Scientific
+  # application/x-netcdf matches too many in US.
+
+  # Images
+  'image/tiff',
+  'image/jp2',
+
+  # Geospatial
+  'application/x-shapefile',
+  'application/x-worldfile',
+  'application/gml+xml',
+  'application/vnd.google-earth.kmz',
+  'application/x-ascii-grid',
+  'application/vnd.google-earth.kml+xml',
+  'application/x-filegdb',
+  'application/vnd.ogc.wms_xml',
+
+  # Tabular
+  'application/dbf',
+  'application/x-msaccess'
+)
+
+# Get the denominator.
+q <- paste("SELECT division_id, COUNT(*) FROM inventory_distribution WHERE \"mediaType\" IN (", paste(quote(geospatial_media_types), collapse=', '), ") GROUP BY division_id HAVING COUNT(*) >= 20 ORDER BY division_id")
+rows <- dbGetQuery(con, q)
+count <- rows$count
+
+# Get the media type usage per catalog.
+for (media_type in geospatial_media_types) {
+  q <- paste("SELECT division_id, COUNT(case when \"mediaType\" = '", media_type, "' then 1 end) FROM inventory_distribution WHERE division_id IN (", paste(quote(rows$division_id), collapse=', ') ,") GROUP BY division_id ORDER BY division_id", sep='')
+  rows[media_type] <- dbGetQuery(con, q)$count / count
+}
+
+rows <- rows[!rows$division_id %in% subnational,]
+rows$count <- NULL
+m <- melt(rows, 'division_id')
+
+# Draw the bars.
+m$division_id <- country_names(m$division_id)
+m$variable <- media_types(m$variable)
+
+png('~/Downloads/media-types.png', width=width, height=width * 1.5)
+ggplot(data=m, aes(x=variable, y=value)) + geom_bar(stat='identity') + theme(
+  axis.title.x=element_blank(),
+  axis.text.y=element_blank(),
+  axis.ticks.y=element_blank(),
+  axis.title.y=element_blank(),
+  strip.text.y=element_text(angle=0)
+) + scale_y_sqrt() + facet_grid(division_id ~ .)
+dev.off()
+
+
+
 # Licenses
 
 exclude <- c(
-  # Alpha.
-  'ocd-division/country:tz',
-
   # No license metadata.
   'ocd-division/country:cl',
   'ocd-division/country:cr',
-  'ocd-division/country:gh'
+  'ocd-division/country:gh',
+
+  # @todo Remove once initiative is not alpha.
+  'ocd-division/country:tz'
 )
 
 # Get the denominator.

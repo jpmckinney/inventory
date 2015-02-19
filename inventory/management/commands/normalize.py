@@ -118,10 +118,9 @@ class Command(InventoryCommand):
                 if len(set(media_types)) > 1:
                     self.bad_guess('Multiple specific media types', guesses, distribution)
             elif guesses['accessURL']:
-                # @todo Do HEAD requests, as sometimes the file extension
-                # is misleading, e.g. .xml redirects to .html in GB. Note
-                # that even when the metadata is consistent, the media type
-                # could be incorrect.
+                # The file extension is misleading, e.g. .xml redirects to .html
+                # in GB. Note that even when the metadata is consistent, the
+                # guessed media type could be incorrect.
                 if guesses['mimetype'] and guesses['accessURL'] != guesses['mimetype']:
                     self.bad_guess('Conflict', guesses, distribution)
                 elif guesses['format'] and guesses['accessURL'] != guesses['format']:
