@@ -65,17 +65,19 @@ class Command(InventoryCommand):
                     # @see http://stackoverflow.com/a/845595/244258
                     futures.append(session.get(quote(distribution.accessURL, safe="%/:=&?~#+!$,;'@()*[]"),
                         stream=True,
-                        allow_redirects=False,
+                        verify=False,
                         background_callback=factory(distribution)))
 
                 for future in futures:
                     try:
                         future.result()
                     except (
+                        requests.exceptions.ConnectionError,
                         requests.exceptions.InvalidSchema,
                         requests.exceptions.InvalidURL,
                         requests.exceptions.MissingSchema,
                         requests.exceptions.SSLError,
+                        requests.exceptions.TooManyRedirects,
                         requests.packages.urllib3.exceptions.ProtocolError):
                         self.exception('')
 
