@@ -21,31 +21,33 @@ class Command(InventoryCommand):
 
     def handle(self, *args, **options):
         self.setup(*args, **options)
+        self.multiprocess(self.retrieve, {'dry_run': options['dry_run'], 'media_type': options['media_type']})
 
-        # Avoids "Connection pool is full, discarding connection" warnings.
-        # @see http://docs.python-requests.org/en/latest/api/#requests.adapters.HTTPAdapter
-        # @see https://github.com/ross/requests-futures/blob/master/requests_futures/sessions.py
-        session = FuturesSession()
-        adapter_kwargs = {'pool_maxsize': 10}
-        session.mount('https://', requests.adapters.HTTPAdapter(**adapter_kwargs))
-        session.mount('http://', requests.adapters.HTTPAdapter(**adapter_kwargs))
-
-        # Collect the distribution-response pairs.
-        def callback(distribution, response):
-            results.append([distribution, response])
-
-        # Create a closure.
-        def factory(distribution):
-            return lambda session, response: callback(distribution, response)
-
-        for catalog in self.catalogs:
+    def retrieve(self, catalog, *, dry_run=False, media_type=''):
+        if not dry_run:
             distributions = Distribution.objects.filter(division_id=catalog.division_id, http_status_code__isnull=True)
 
-            if options['media_type']:
-                distributions = distributions.filter(mediaType=options['media_type'])
+            if media_type:
+                distributions = distributions.filter(mediaType=media_type)
 
             if not distributions.exists():
-                continue
+                return
+
+            # Collect the distribution-response pairs.
+            def callback(distribution, response):
+                results.append([distribution, response])
+
+            # Create a closure.
+            def factory(distribution):
+                return lambda session, response: callback(distribution, response)
+
+            # @see http://docs.python-requests.org/en/latest/api/#requests.adapters.HTTPAdapter
+            # @see https://github.com/ross/requests-futures/blob/master/requests_futures/sessions.py
+            session = FuturesSession()
+            # Avoids "Connection pool is full, discarding connection" warnings.
+            adapter_kwargs = {'pool_maxsize': 10}
+            session.mount('https://', requests.adapters.HTTPAdapter(**adapter_kwargs))
+            session.mount('http://', requests.adapters.HTTPAdapter(**adapter_kwargs))
 
             # @see https://djangosnippets.org/snippets/1949/
             pk = 0
@@ -75,6 +77,7 @@ class Command(InventoryCommand):
                             requests.exceptions.InvalidSchema,
                             requests.exceptions.InvalidURL,
                             requests.exceptions.MissingSchema,
+                            requests.exceptions.ReadTimeout,
                             requests.exceptions.SSLError,
                             requests.exceptions.TooManyRedirects,
                             requests.packages.urllib3.exceptions.ProtocolError):
@@ -105,3 +108,4 @@ class Command(InventoryCommand):
                     self.debug('{} {} {}'.format(status_code, number_to_human_size(content_length), content_type))
 
                     response.close()
+        self.info('{} done'.format(catalog))

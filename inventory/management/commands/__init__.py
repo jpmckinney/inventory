@@ -1,5 +1,7 @@
 import logging
+import signal
 import sys
+from multiprocessing import Process
 from optparse import make_option
 
 import requests
@@ -75,6 +77,25 @@ class InventoryCommand(BaseCommand):
             if options['expire_after']:
                 cache_options['expire_after'] = options['expire_after']
             requests_cache.install_cache('inventory_cache', allowable_methods=('HEAD', 'GET', 'POST'), **cache_options)
+
+    def multiprocess(self, target, kwargs):
+        processes = [
+            Process(target=target, args=(catalog,), kwargs=kwargs)
+            for catalog in self.catalogs
+        ]
+
+        def signal_handler(signal, frame):
+            for process in processes:
+                process.terminate()
+            sys.exit(0)
+
+        signal.signal(signal.SIGINT, signal_handler)
+
+        for process in processes:
+            process.start()
+
+        for process in processes:
+            process.join()
 
     def get(self, url):
         try:

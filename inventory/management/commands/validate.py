@@ -25,23 +25,23 @@ class Command(InventoryCommand):
 
     def handle(self, *args, **options):
         self.setup(*args, **options)
-        self.options = options
+        self.multiprocess(self.validate, {'dry_run': options['dry_run'], 'options': options})
 
-        for catalog in self.catalogs:
+    def validate(self, catalog, *, dry_run=False, options={}):
+        if not dry_run:
             distributions = Distribution.objects.filter(division_id=catalog.division_id, mediaType='text/csv', valid__isnull=True)
-
-            if self.options['distributions']:
-                distributions = distributions[:self.options['distributions']]
-
+            if options['distributions']:
+                distributions = distributions[:options['distributions']]
             for distribution in distributions.iterator():
-                self.validate(distribution)
+                self.validate_catalog(distribution, options)
+        self.info('{} done'.format(catalog))
 
-    def validate(self, distribution):
+    def validate_catalog(self, distribution, options):
         if distribution.http_status_code == 200 and distribution.http_content_length and distribution.http_content_length < 1e6:  # 1 MB
             # @see http://stackoverflow.com/a/845595/244258
             url = quote(distribution.accessURL, safe="%/:=&?~#+!$,;'@()*[]")
             self.info('{} {}'.format(number_to_human_size(distribution.http_content_length), url))
-            (success, data) = self.validate_csv(url)
+            (success, data) = self.validate_csv(url, rows=options['rows'])
 
             if success:
                 distribution.valid = data['valid']
@@ -53,11 +53,11 @@ class Command(InventoryCommand):
                 self.error(data)
 
     # @see https://github.com/theodi/csvlint.rb#errors
-    def validate_csv(self, url):
+    def validate_csv(self, url, *, rows=0):
         args = ['ruby', self.csv_validator_path, url]
 
-        if self.options['rows']:
-            args.append(str(self.options['rows']))
+        if rows:
+            args.append(str(rows))
 
         try:
             output = subprocess.check_output(args)
