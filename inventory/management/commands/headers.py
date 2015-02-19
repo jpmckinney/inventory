@@ -71,14 +71,13 @@ class Command(InventoryCommand):
                 for future in futures:
                     try:
                         future.result()
-                    except (
-                        requests.exceptions.ConnectionError,
-                        requests.exceptions.InvalidSchema,
-                        requests.exceptions.InvalidURL,
-                        requests.exceptions.MissingSchema,
-                        requests.exceptions.SSLError,
-                        requests.exceptions.TooManyRedirects,
-                        requests.packages.urllib3.exceptions.ProtocolError):
+                    except (requests.exceptions.ConnectionError,
+                            requests.exceptions.InvalidSchema,
+                            requests.exceptions.InvalidURL,
+                            requests.exceptions.MissingSchema,
+                            requests.exceptions.SSLError,
+                            requests.exceptions.TooManyRedirects,
+                            requests.packages.urllib3.exceptions.ProtocolError):
                         self.exception('')
 
                 for distribution, response in results:
