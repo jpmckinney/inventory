@@ -59,6 +59,7 @@ SELECT s.division_id, COUNT(*)
 rows <- dbGetQuery(connection, q)
 
 # Get the usage of groups of media types per catalog.
+# @note Includes only media types with >75 datasets.
 for (group in media_type_groups) {
   q <- paste("
     SELECT s.division_id, COUNT(CASE WHEN s.\"mediaType\" IN (", paste(quote(group[[2]]), collapse=', ') ,") THEN 1 END)
