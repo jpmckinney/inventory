@@ -29,6 +29,7 @@ distribution_fields <- list(
   c('modified', "modified IS NOT NULL")
 )
 
+# Sorted alphabetically.
 media_type_groups <- list(
   list('Documents', c(
     'application/msword',
@@ -67,24 +68,24 @@ media_type_groups <- list(
     'text/plain'
   )),
   list('Tabular', c(
-    'text/csv',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.oasis.opendocument.spreadsheet',
-    'application/x-msaccess',
     'application/dbf'
+    'application/vnd.ms-excel',
+    'application/vnd.oasis.opendocument.spreadsheet',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/x-msaccess',
+    'text/csv',
   )),
   list('Scientific', c(
+    'application/x-hdf'
     'application/x-netcdf',
     'application/x-pc-axis',
-    'chemical/x-xyz',
     'application/x-segy',
-    'application/x-hdf'
+    'chemical/x-xyz',
   )),
   list('Linked data', c(
-    'text/turtle',
     'application/rdf+xml',
     'text/n3'
+    'text/turtle',
   ))
 )
 
