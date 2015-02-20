@@ -98,3 +98,30 @@ human_licenses <- function (l) {
     'http://www.nationalarchives.gov.uk/doc/open-government-licence/'='OGL-UK-3.0'
   )))
 }
+
+human_errors <- function (l) {
+    return(revalue(l, c(
+        # Errors
+        'wrong_content_type'='The Content-Type header is not “text/csv”',
+        'ragged_rows'='Rows have different numbers of columns',
+        'blank_rows'='One or more rows is empty',
+        'invalid_encoding'='Encoding error, e.g. invalid byte sequence',
+        'not_found'='HTTP 404 status code',
+        'stray_quote'='Stray quote character',
+        'unclosed_quote'='Unclosed quoted field',
+        'whitespace'='A quoted field has leading or trailing whitespace',
+        'line_breaks'='The record delimiter is inconsistent',
+        'undeclared_header'='The Content-Type header is missing a "header" parameter',
+
+        # Warnings
+        'no_encoding'='The Content-Type header is missing a "charset" parameter',
+        'encoding'='The encoding is not UTF-8',
+        'no_content_type'='The Content-Type header is missing',
+        'excel'='The Content-Type header is missing and the file extension is .xls or .xlsx',
+        'check_options'='The field delimiter is not a comma',
+        'inconsistent_values'='One or more columns have inconsistent data types',
+        'empty_column_name'='One or more columns have no name',
+        'duplicate_column_name'='Two or more columns have the same name',
+        'title_row'='The first row has fewer columns than the longest row'
+    )))
+}

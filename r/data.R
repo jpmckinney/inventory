@@ -73,3 +73,81 @@ ggplot(data=m, aes(x=variable, y=value)) + geom_bar(stat='identity') + theme(
   strip.text.y=element_text(angle=0)
 ) + scale_y_sqrt() + facet_grid(division_id ~ .)
 dev.off()
+
+
+
+# CSV validation
+# @note Includes subnational catalogs if scraped!
+q <- "
+SELECT UNNEST(errors) error, COUNT(*)
+  FROM inventory_distribution
+  WHERE valid = False
+    AND \"mediaType\" = 'text/csv'
+    AND http_content_type = 'text/csv'
+    AND http_status_code = 200
+  GROUP BY error
+"
+rows <- dbGetQuery(connection, q)
+
+q <- "
+SELECT COUNT(*)
+  FROM inventory_distribution
+  WHERE valid = False
+    AND \"mediaType\" = 'text/csv'
+    AND http_content_type = 'text/csv'
+    AND http_status_code = 200
+"
+count <- dbGetQuery(connection, q)$count
+
+m <- rows[rows$count>=25,]
+
+m$count <- m$count / count
+
+# Ignore `title_row`, because it has a bug.
+# @see https://github.com/theodi/csvlint.rb/issues/100
+# Ignore `undeclared_header`. CSVLint assumes a header if the Content-Type is
+# "text/csv", instead of checking for a "header" parameter in all cases.
+m <- m[!m$error=='title_row',]
+m <- m[!m$error=='undeclared_header',]
+
+m$error <- human_errors(m$error)
+m <- transform(m, error=reorder(error, count))
+
+ggplot(data=m, aes(x=error, y=count)) + geom_bar(stat='identity') + theme(
+  axis.title=element_blank(),
+  text=element_text(size=16)
+) + scale_y_continuous(labels=percent) + coord_flip()
+
+
+
+# CSV encoding
+# @note Includes subnational catalogs if scraped!
+q <- "
+SELECT UPPER(http_charset), COUNT(*)
+  FROM inventory_distribution
+  WHERE \"mediaType\" = 'text/csv'
+    AND http_content_type = 'text/csv'
+    AND http_status_code = 200
+  GROUP BY upper
+"
+rows <- dbGetQuery(connection, q)
+
+q <- "
+SELECT COUNT(*)
+  FROM inventory_distribution
+  WHERE \"mediaType\" = 'text/csv'
+    AND http_content_type = 'text/csv'
+    AND http_status_code = 200
+"
+count <- dbGetQuery(connection, q)$count
+
+m <- rows
+
+m$count <- m$count / count
+
+m <- transform(m, upper=reorder(upper, count))
+
+ggplot(data=m, aes(x=upper, y=count)) + geom_bar(stat='identity') + theme(
+  axis.title=element_blank(),
+  text=element_text(size=16)
+) + scale_y_continuous(labels=percent) + coord_flip()
