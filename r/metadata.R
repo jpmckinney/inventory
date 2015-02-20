@@ -12,7 +12,8 @@ width <- 575
 # @note Includes subnational catalogs if scraped!
 q <- "
 SELECT COUNT(*)
-  FROM inventory_dataset"
+  FROM inventory_dataset
+"
 rows <- dbGetQuery(connection, q)
 
 # Get the dataset metadata element usage.
@@ -42,7 +43,8 @@ ggplot(data=m, aes(x=variable, y=value)) + geom_bar(stat='identity', width=.75) 
 # Get the denominator.
 q <- "
 SELECT COUNT(*)
-  FROM inventory_distribution"
+  FROM inventory_distribution
+"
 rows <- dbGetQuery(connection, q)
 
 # Get the distribution metadata element usage.
@@ -74,7 +76,8 @@ q <- "
 SELECT division_id, COUNT(*)
   FROM inventory_dataset
   GROUP BY division_id
-  ORDER BY division_id"
+  ORDER BY division_id
+"
 rows <- dbGetQuery(connection, q)
 
 # Get the dataset metadata element usage per catalog.
@@ -113,7 +116,8 @@ q <- "
 SELECT division_id, COUNT(*)
   FROM inventory_distribution
   GROUP BY division_id
-  ORDER BY division_id"
+  ORDER BY division_id
+"
 rows <- dbGetQuery(connection, q)
 
 # Get the distribution metadata element usage per catalog.

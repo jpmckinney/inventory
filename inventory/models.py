@@ -44,10 +44,12 @@ class Dataset(models.Model):  # dcat:Dataset
     license_id = models.TextField(default='')
     license_url = models.URLField(default='')
     license_title = models.TextField(default='')
-    license = models.URLField(default='', db_index=True)  # dct
+    license = models.URLField(default='', db_index=True)
 
     class Meta:
-        unique_together = (('division_id', 'name'),)
+        unique_together = (
+            ('division_id', 'name'),
+        )
 
     def __str__(self):
         return '{}: {}'.format(self.division_id, self.name)
@@ -74,8 +76,8 @@ class Distribution(models.Model):  # dcat:Distribution
     description = models.TextField(default='')  # dct
     issued = models.DateTimeField(null=True)  # dct
     modified = models.DateTimeField(null=True)  # dct
-    license = models.URLField(default='', db_index=True)  # dct, plus dct:rights
-    accessURL = models.URLField(default='', max_length=2000)  # dcat, plus dcat:downloadURL (length 1692 observed)
+    license = models.URLField(default='', db_index=True)  # dct
+    accessURL = models.URLField(default='', max_length=2000)  # dcat (length 1692 observed)
     byteSize = models.BigIntegerField(null=True)  # dcat
     format = models.TextField(default='')  # dct
     mediaType = models.TextField(default='', db_index=True)  # dcat
@@ -96,7 +98,13 @@ class Distribution(models.Model):  # dcat:Distribution
     errors = ArrayField(dbtype='text')
 
     class Meta:
-        unique_together = (('dataset', '_id'),)
+        unique_together = (
+            ('dataset', '_id'),
+        )
+        index_together = (
+            ('dataset', 'mediaType'),
+            ('dataset', 'division_id', 'mediaType'),
+        )
 
     def __str__(self):
         return '{}: {} {}'.format(self.division_id, self.dataset, self._id)

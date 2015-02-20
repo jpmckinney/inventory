@@ -6,19 +6,32 @@ source('includes/human.R')
 source('includes/database.R')
 
 width <- 575
-quote <- function(l) lapply(l, function(x) paste("'", x, "'", sep=''))
+quote <- function (l) {
+  return(lapply(l, function(x) paste("'", x, "'", sep='')))
+}
 
 # Global media type usage.
 # @note Includes subnational catalogs if scraped!
+# q <- "
+# SELECT \"mediaType\", COUNT(*)
+#   FROM inventory_distribution
+#   WHERE \"mediaType\" != ''
+#   GROUP BY \"mediaType\"
+# "
 q <- "
-SELECT \"mediaType\", COUNT(*)
-  FROM inventory_distribution
-  WHERE \"mediaType\" != ''
-  GROUP BY \"mediaType\""
+SELECT s.\"mediaType\", COUNT(*)
+  FROM (
+    SELECT DISTINCT dataset_id, \"mediaType\"
+      FROM inventory_distribution
+      WHERE \"mediaType\" != ''
+    ) s
+  GROUP BY s.\"mediaType\"
+  ORDER BY count DESC
+"
 rows <- dbGetQuery(connection, q)
 
 # Only display popular media types.
-m <- rows[rows$count>=100,]
+m <- rows[rows$count>=75,]
 
 m$mediaType <- human_media_types(m$mediaType)
 m <- transform(m, mediaType=reorder(mediaType, count))
@@ -35,23 +48,29 @@ dev.off()
 
 # Get the denominator.
 q <- paste("
-SELECT division_id, COUNT(*)
-  FROM inventory_distribution
-  WHERE \"mediaType\" IN (", paste(quote(geospatial_media_types), collapse=', '), ")
-  GROUP BY division_id
+SELECT s.division_id, COUNT(*)
+  FROM (
+    SELECT DISTINCT dataset_id, division_id
+      FROM inventory_distribution
+      WHERE \"mediaType\" IN (", paste(quote(geo_media_types), collapse=', '), ")
+    ) s
+  GROUP BY s.division_id
   HAVING COUNT(*) >= 20
-  ORDER BY division_id
+  ORDER BY s.division_id
 ")
 rows <- dbGetQuery(connection, q)
 
 # Get the geospatial media type usage per catalog.
-for (media_type in geospatial_media_types) {
+for (media_type in geo_media_types) {
   q <- paste("
-    SELECT division_id, COUNT(CASE WHEN \"mediaType\" = '", media_type, "' THEN 1 END)
-      FROM inventory_distribution
-      WHERE division_id IN (", paste(quote(rows$division_id), collapse=', ') ,")
-      GROUP BY division_id
-      ORDER BY division_id", sep='')
+    SELECT s.division_id, COUNT(CASE WHEN s.\"mediaType\" = '", media_type, "' THEN 1 END)
+      FROM (
+        SELECT DISTINCT dataset_id, division_id, \"mediaType\"
+          FROM inventory_distribution
+          WHERE division_id IN (", paste(quote(rows$division_id), collapse=', ') ,")
+        ) s
+      GROUP BY s.division_id
+      ORDER BY s.division_id", sep='')
   rows[media_type] <- dbGetQuery(connection, q)$count / rows$count
 }
 
@@ -64,8 +83,9 @@ m$division_id <- human_division_ids(m$division_id)
 m$variable <- human_media_types(m$variable)
 
 # Draw the plot for the report.
-png('~/Downloads/media-types.png', width=width, height=width * 1.5)
+png('~/Downloads/geo-media-types.png', width=width, height=width * 1.5)
 ggplot(data=m, aes(x=variable, y=value)) + geom_bar(stat='identity') + theme(
+  axis.text.x=element_text(angle=45, hjust=1),
   axis.title.x=element_blank(),
   axis.text.y=element_blank(),
   axis.ticks.y=element_blank(),

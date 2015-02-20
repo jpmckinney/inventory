@@ -30,7 +30,7 @@ distribution_fields <- list(
 )
 
 # Sorted by global usage within each grouping.
-geospatial_media_types <- c(
+geo_media_types <- c(
   # Images
   'image/tiff',
   'image/jp2',
@@ -40,10 +40,10 @@ geospatial_media_types <- c(
   'application/x-worldfile',
   'application/gml+xml',
   'application/vnd.google-earth.kmz',
-  'application/x-ascii-grid',
   'application/vnd.google-earth.kml+xml',
-  'application/x-filegdb',
   'application/vnd.ogc.wms_xml',
+  'application/x-filegdb',
+  'application/x-ascii-grid',
 
   # Tabular
   'application/dbf',
@@ -57,6 +57,51 @@ geospatial_media_types <- c(
   # application/json and application/xml match too many, in some catalogs.
   # Scientific
   # application/x-netcdf matches too many in US.
+)
+
+documents_media_types <- c(
+  'application/msword',
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/xhtml+xml',
+  'text/html'
+)
+images_media_types <- c(
+  'image/gif',
+  'image/jp2',
+  'image/jpeg',
+  'image/tiff',
+  'image/x-cdr'
+)
+geospatial_media_types <- c(
+  'application/gml+xml',
+  'application/vnd.google-earth.kml+xml',
+  'application/vnd.google-earth.kmz',
+  'application/vnd.ogc.wms_xml',
+  'application/x-ascii-grid',
+  'application/x-filegdb',
+  'application/x-shapefile',
+  'application/x-worldfile'
+)
+archives_media_types <- c(
+  'application/gzip',
+  'application/x-msdownload',
+  'application/x-tar',
+  'application/zip'
+)
+tabular_media_types <- c(
+  'text/csv',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.oasis.opendocument.spreadsheet',
+  'application/x-msaccess',
+  'application/dbf'
+)
+generic_media_types <- c(
+  'application/json',
+  'application/rss+xml',
+  'application/xml',
+  'text/plain'
 )
 
 # Exclude subnational catalogs from national statistics.
