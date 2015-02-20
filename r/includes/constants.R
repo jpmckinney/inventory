@@ -29,8 +29,67 @@ distribution_fields <- list(
   c('modified', "modified IS NOT NULL")
 )
 
+media_type_groups <- list(
+  list('Documents', c(
+    'application/msword',
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/xhtml+xml',
+    'text/html'
+  )),
+  list('Images', c(
+    'image/gif',
+    'image/jp2',
+    'image/jpeg',
+    'image/tiff',
+    'image/x-cdr'
+  )),
+  list('Geospatial', c(
+    'application/gml+xml',
+    'application/vnd.google-earth.kml+xml',
+    'application/vnd.google-earth.kmz',
+    'application/vnd.ogc.wms_xml',
+    'application/x-ascii-grid',
+    'application/x-filegdb',
+    'application/x-shapefile',
+    'application/x-worldfile'
+  )),
+  list('Archives', c(
+    'application/gzip',
+    'application/x-msdownload',
+    'application/x-tar',
+    'application/zip'
+  )),
+  list('Generic', c(
+    'application/json',
+    'application/rss+xml',
+    'application/xml',
+    'text/plain'
+  )),
+  list('Tabular', c(
+    'text/csv',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.oasis.opendocument.spreadsheet',
+    'application/x-msaccess',
+    'application/dbf'
+  )),
+  list('Scientific', c(
+    'application/x-netcdf',
+    'application/x-pc-axis',
+    'chemical/x-xyz',
+    'application/x-segy',
+    'application/x-hdf'
+  )),
+  list('Linked data', c(
+    'text/turtle',
+    'application/rdf+xml',
+    'text/n3'
+  ))
+)
+
 # Sorted by global usage within each grouping.
-geo_media_types <- c(
+geospatial_media_types <- c(
   # Images
   'image/tiff',
   'image/jp2',
@@ -57,51 +116,6 @@ geo_media_types <- c(
   # application/json and application/xml match too many, in some catalogs.
   # Scientific
   # application/x-netcdf matches too many in US.
-)
-
-documents_media_types <- c(
-  'application/msword',
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/xhtml+xml',
-  'text/html'
-)
-images_media_types <- c(
-  'image/gif',
-  'image/jp2',
-  'image/jpeg',
-  'image/tiff',
-  'image/x-cdr'
-)
-geospatial_media_types <- c(
-  'application/gml+xml',
-  'application/vnd.google-earth.kml+xml',
-  'application/vnd.google-earth.kmz',
-  'application/vnd.ogc.wms_xml',
-  'application/x-ascii-grid',
-  'application/x-filegdb',
-  'application/x-shapefile',
-  'application/x-worldfile'
-)
-archives_media_types <- c(
-  'application/gzip',
-  'application/x-msdownload',
-  'application/x-tar',
-  'application/zip'
-)
-tabular_media_types <- c(
-  'text/csv',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.oasis.opendocument.spreadsheet',
-  'application/x-msaccess',
-  'application/dbf'
-)
-generic_media_types <- c(
-  'application/json',
-  'application/rss+xml',
-  'application/xml',
-  'text/plain'
 )
 
 # Exclude subnational catalogs from national statistics.

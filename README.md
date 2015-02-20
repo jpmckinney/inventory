@@ -1,6 +1,6 @@
 # OGP ODWG Standards Stream Inventory
 
-Scripts used by the [Open Government Partnership](http://www.opengovpartnership.org/) (OGP) [Open Data Working Group](http://www.opengovpartnership.org/get-involved/join-working-group) Standards Stream to build an inventory of de jure and de facto open data standards.
+Scripts used by Open North as co-lead of the [Open Government Partnership](http://www.opengovpartnership.org/) (OGP) [Open Data Working Group](http://www.opengovpartnership.org/get-involved/join-working-group) Standards Stream.
 
 ## Usage
 
@@ -37,6 +37,7 @@ Read reports on the usage of licenses, media types, catalog structures, DCAT, Pr
     ./manage.py report --schemaorg --silent
     ./manage.py report --federation --silent
     ./manage.py report --licenses
-    ./manage.py report --media-types
+
+See the `r/` directory to generate the graphs in the report.
 
 Copyright (c) 2014 Open North Inc., released under the MIT license
