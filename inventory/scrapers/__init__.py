@@ -1,5 +1,3 @@
-from .base import Catalog
-
 from .ckan import CKAN
 from .junar import Junar
 from .open_colibri import OpenColibri
@@ -11,11 +9,52 @@ from .rss import RSS
 from .ca import CA
 # from .fr import FR
 
+
+class Catalog(object):
+    def __init__(self, division_id, url, *, scraper, get_only=True, verify=True, parameters={}):
+        self.division_id = division_id
+        self.url = url
+        self.scraper = scraper
+        self.get_only = get_only
+        self.verify = verify
+        self.parameters = parameters
+
+    def __str__(self):
+        return '{}: {}'.format(self.division_id, self.scraper.__name__)
+
+    def dataset_url(self, dataset):
+        if issubclass(self.scraper, CKAN):
+            return '{}dataset/{}'.format(self.url, dataset.name)
+        elif self.scraper.__name__ == 'OpenColibri':
+            return '{}dataset/{}'.format(self.url, dataset.identifier)
+        elif self.scraper.__name__ == 'RDF':
+            return dataset.name
+        else:
+            return dataset.landingPage
+
+    def dataset_rdf_url(self, dataset):
+        if issubclass(self.scraper, CKAN):
+            return '{}dataset/{}.rdf'.format(self.url, dataset.name)
+
+    def dataset_api_url(self, dataset):
+        if issubclass(self.scraper, CKAN):
+            return '{}api/action/package_show?id={}'.format(self.url, dataset['name'])
+
+    def harvest_api_url(self, harvest):
+        if issubclass(self.scraper, CKAN):
+            return '{}api/action/harvest_source_show?id={}'.format(self.url, harvest['id'])
+
+    @property
+    def data_json_url(self):
+        parsed = urlparse(self.url)
+        return '{}://{}/data.json'.format(parsed.scheme, parsed.netloc)
+
+
 catalogs = [
     Catalog('ocd-division/country:ar', 'http://datospublicos.gob.ar/data/', scraper=CKAN),
     Catalog('ocd-division/country:au', 'http://data.gov.au/', scraper=CKAN),
     Catalog('ocd-division/country:br', 'http://dados.gov.br/', scraper=CKAN),
-    Catalog('ocd-division/country:ca', 'http://data.gc.ca/data/en/', scraper=CA),
+    Catalog('ocd-division/country:ca', 'http://open.canada.ca/data/', scraper=CA),
     Catalog('ocd-division/country:cl', 'http://api.recursos.datos.gob.cl/', scraper=Junar, parameters={'auth_key': '6ae305b9ad9923f768879e851addf143c3461182'}),
     Catalog('ocd-division/country:cr', 'http://gobiernodigitalcr.cloudapi.junar.com/', scraper=Junar, parameters={'auth_key': 'a99bb53e81c5fcaec72fd313fcb97c7306e13d3d'}),
     Catalog('ocd-division/country:ee', 'https://opendata.riik.ee/', scraper=CKAN, get_only=False, verify=False),
