@@ -11,6 +11,7 @@ from django.db.models import Count
 
 from . import InventoryCommand
 from inventory.models import Dataset, Distribution
+from inventory.scrapers import CKAN
 
 
 class Command(InventoryCommand):
@@ -19,6 +20,8 @@ class Command(InventoryCommand):
     option_list = InventoryCommand.option_list + (
         make_option('--access', action='append_const', dest='reports', const='access',
                     help='Classification of direct download domain names, for import into R.'),
+        make_option('--api', action='append_const', dest='reports', const='api',
+                    help='Usage of catalog API technologies.'),
         make_option('--dcat', action='append_const', dest='reports', const='dcat',
                     help='Usage of DCAT by CKAN catalogs.'),
         make_option('--pod', action='append_const', dest='reports', const='pod',
@@ -51,9 +54,22 @@ class Command(InventoryCommand):
             series[catalog.division_id] = getter(catalog)
         return pd.Series(series)
 
+    def api(self):
+        def getter(catalog):
+            if issubclass(catalog.scraper, CKAN):
+                if catalog.get_only:
+                    method = 'GET'
+                else:
+                    method = 'POST'
+                response = self.request(method, '{}api/util/status'.format(catalog.url))
+                if response.status_code == 200:
+                    return int('datastore' in response.json()['extensions'])
+
+        return self.series(getter)
+
     def dcat(self):
         def getter(catalog):
-            if catalog.scraper.__name__ == 'CKAN':
+            if issubclass(catalog.scraper, CKAN):
                 datasets = Dataset.objects.filter(division_id=catalog.division_id)
                 if datasets.exists():
                     response = self.get(catalog.dataset_url(datasets[0]))
@@ -104,7 +120,7 @@ class Command(InventoryCommand):
         frame = defaultdict(lambda: defaultdict(int))
         for catalog in self.catalogs:
             # Assumes we don't need to paginate.
-            if catalog.scraper.__name__ == 'CKAN':
+            if issubclass(catalog.scraper, CKAN):
                 client = ckanapi.RemoteCKAN(catalog.url, get_only=catalog.get_only)
                 package_search = client.call_action('package_search', {'fq': 'type:harvest', 'rows': 300000}, verify=catalog.verify)
 

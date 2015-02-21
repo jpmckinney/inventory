@@ -33,6 +33,7 @@ Validate CSV files (must run headers command first):
 Read reports on the usage of licenses, media types, catalog structures, DCAT, Project Open Data Metadata Schema, Schema.org, data federation:
 
     ./manage.py report --access --csv > r/access.csv
+    ./manage.py report --api --silent
     ./manage.py report --dcat --silent
     ./manage.py report --pod --silent
     ./manage.py report --schemaorg --silent

@@ -97,14 +97,17 @@ class InventoryCommand(BaseCommand):
         for process in processes:
             process.join()
 
-    def get(self, url):
+    def request(self, method, url):
         try:
-            response = requests.get(url)
+            response = requests.request(method, url)
         except requests.exceptions.SSLError:
-            response = requests.get(url, verify=False)
+            response = requests.request(method, url, verify=False)
         if response.status_code != 200:
             self.warning('{} {}'.format(response.status_code, response.url))
         return response
+
+    def get(self, url):
+        return self.request('GET', url)
 
 
 def number_to_human_size(number, suffix='B'):
