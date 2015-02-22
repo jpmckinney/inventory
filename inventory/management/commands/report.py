@@ -57,13 +57,12 @@ class Command(InventoryCommand):
     def api(self):
         def getter(catalog):
             if issubclass(catalog.scraper, CKAN):
-                if catalog.get_only:
-                    method = 'GET'
-                else:
-                    method = 'POST'
-                response = self.request(method, '{}api/util/status'.format(catalog.url))
-                if response.status_code == 200:
-                    return int('datastore' in response.json()['extensions'])
+                try:
+                    client = ckanapi.RemoteCKAN(catalog.url, get_only=catalog.get_only)
+                    status_show = client.call_action('status_show', verify=catalog.verify)
+                    return int('datastore' in status_show['extensions'])
+                except ckanapi.errors.CKANAPIError:
+                    pass
 
         return self.series(getter)
 
