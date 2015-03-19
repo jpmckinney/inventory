@@ -148,7 +148,11 @@ class Command(InventoryCommand):
         return pd.DataFrame(frame)
 
     def licenses(self):
-        self.report(Dataset, 'license', distinct='id')
+        frame = defaultdict(lambda: defaultdict(int))
+        for catalog in self.catalogs:
+            for value in Dataset.objects.filter(division_id=catalog.division_id).values('license').annotate(count=Count('id', distinct=True)).order_by('count').iterator():
+                frame[catalog.division_id][value['license']] = value['count']
+        return pd.DataFrame(frame)
 
     def report(self, klass, field, *, distinct):
         for catalog in self.catalogs:
@@ -177,7 +181,7 @@ class Command(InventoryCommand):
                 response = self.get(package['url'])
                 if response.status_code == 200:
                     try:
-                        return normalize_scheme(response)
+                        return normalize_metadata_scheme(response)
                     except lxml.etree.XMLSyntaxError:
                         pass
             # @see https://github.com/GSA/ckanext-geodatagov/blob/master/ckanext/geodatagov/harvesters/waf_collection.py
@@ -192,7 +196,7 @@ class Command(InventoryCommand):
                 else:
                     response = self.get(config['collection_metadata_url'])
                     if response.status_code == 200:
-                        scheme = normalize_scheme(response)
+                        scheme = normalize_metadata_scheme(response)
                         if scheme:
                             return 'waf-{}'.format(scheme)
             else:
@@ -216,7 +220,7 @@ def normalize_source_type(package, source_type):
         return 'csw'
 
 
-def normalize_scheme(response):
+def normalize_metadata_scheme(response):
     if 'FGDC-STD-001-1998' in response.text:
         return 'fgdc'
     elif lxml.etree.fromstring(response.content).xpath('/MD_Metadata|/gmi:MI_Metadata', namespaces={'gmi': 'http://www.isotc211.org/2005/gmi'}):
