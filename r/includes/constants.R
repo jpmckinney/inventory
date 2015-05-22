@@ -68,24 +68,24 @@ media_type_groups <- list(
     'text/plain'
   )),
   list('Tabular', c(
-    'application/dbf'
+    'application/dbf',
     'application/vnd.ms-excel',
     'application/vnd.oasis.opendocument.spreadsheet',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'application/x-msaccess',
-    'text/csv',
+    'text/csv'
   )),
   list('Scientific', c(
-    'application/x-hdf'
+    'application/x-hdf',
     'application/x-netcdf',
     'application/x-pc-axis',
     'application/x-segy',
-    'chemical/x-xyz',
+    'chemical/x-xyz'
   )),
   list('Linked data', c(
     'application/rdf+xml',
-    'text/n3'
-    'text/turtle',
+    'text/n3',
+    'text/turtle'
   ))
 )
 
